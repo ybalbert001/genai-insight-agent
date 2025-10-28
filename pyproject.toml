@@ -1,0 +1,19 @@
+[project]
+name = "genai-insight-agent"
+version = "0.1.0"
+description = "GenAI项目洞察分析代理"
+authors = [{name = "ybalbert001", email = "ybalbert001@gmail.com"}]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "schedule>=1.2.0",
+    "requests>=2.31.0",
+    "json-repair>=0.25.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = []
