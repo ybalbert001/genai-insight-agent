@@ -2,6 +2,7 @@ import time
 import requests
 import json
 import os
+import argparse
 from datetime import datetime, timedelta
 from dify_helper import invoke_slow_workflow
 from typing import Dict, Any
@@ -33,9 +34,32 @@ def run_hellogithub_routine_job():
     
     return invoke_slow_workflow(record=input_dict, workflow_api_key=workflow_api_key_hellogithub)
 
-#run_project_analyze_job("https://github.com/vllm-project/vllm", '2025-10-22')
-#run_project_analyze_job("https://github.com/sgl-project/sglang", '2025-10-22')
-run_project_analyze_job("https://github.com/langgenius/dify", '2025-10-22')
-#run_project_analyze_job("https://github.com/cline/cline", '2025-10-22')
-#run_project_analyze_job("https://github.com/BerriAI/litellm", '2025-10-22')
-#run_project_analyze_job("https://github.com/hiyouga/LLaMA-Factory", '2025-10-22')
+def main():
+    parser = argparse.ArgumentParser(description='手动运行GenAI项目分析')
+    parser.add_argument('--date', '-d', type=str, default='2025-10-22', 
+                       help='分析开始日期 (格式: YYYY-MM-DD, 默认: 2025-10-22)')
+    
+    args = parser.parse_args()
+    
+    # 项目列表
+    repos = [
+        "https://github.com/vllm-project/vllm",
+        "https://github.com/sgl-project/sglang", 
+        "https://github.com/langgenius/dify",
+        "https://github.com/cline/cline",
+        "https://github.com/BerriAI/litellm",
+        "https://github.com/hiyouga/LLaMA-Factory"
+    ]
+    
+    print(f"开始分析项目，起始日期: {args.date}")
+    
+    for repo in repos:
+        print(f"分析项目: {repo}")
+        try:
+            result = run_project_analyze_job(repo, args.date)
+            print(f"✓ 完成: {repo}")
+        except Exception as e:
+            print(f"✗ 失败: {repo} - {e}")
+
+if __name__ == "__main__":
+    main()

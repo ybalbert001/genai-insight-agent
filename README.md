@@ -34,6 +34,19 @@ uv run python run_tasks.py
 python run_tasks.py
 ```
 
+### 手动运行项目分析
+
+```bash
+# 使用默认日期 (2025-10-22)
+uv run python manual_run.py
+
+# 指定分析开始日期
+uv run python manual_run.py --date 2025-10-28
+
+# 使用短参数
+uv run python manual_run.py -d 2025-10-28
+```
+
 ## Analyze API调用示例
 
 ### HelloGitHub日报触发
