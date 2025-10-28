@@ -2,3 +2,4 @@ _logs/
 _cacache
 __pycache__
 _update-notifier-last-checked
+.env

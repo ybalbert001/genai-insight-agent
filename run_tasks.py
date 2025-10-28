@@ -3,8 +3,13 @@ import time
 import requests
 import json
 import logging
+import os
 from datetime import datetime, timedelta
 from dify_helper import invoke_slow_workflow
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
 
 # 配置日志
 logging.basicConfig(
@@ -16,8 +21,11 @@ logging.basicConfig(
     ]
 )
 
-workflow_api_key_hellogithub = 'app-lJpX4GANg9d6pud8ciHnh9EJ'
-workflow_api_key_github_analyze = 'app-UWkAZ1R1rFKh5ppB5iONDzSx'
+workflow_api_key_hellogithub = os.getenv('WORKFLOW_API_KEY_HELLOGITHUB')
+workflow_api_key_github_analyze = os.getenv('WORKFLOW_API_KEY_GITHUB_ANALYZE')
+
+if not workflow_api_key_hellogithub or not workflow_api_key_github_analyze:
+    raise ValueError("请在.env文件中设置WORKFLOW_API_KEY_HELLOGITHUB和WORKFLOW_API_KEY_GITHUB_ANALYZE")
 
 def run_project_analyze_job(repo: str, start_date: str):
     """
