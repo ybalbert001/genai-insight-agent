@@ -1,14 +1,24 @@
 # GenAI Insight Agent
 
-GenAI项目洞察分析代理，用于自动化分析GitHub项目。
+GenAI项目洞察分析代理，用于自动化分析GitHub项目。分析的主要目标是为了GenAI领域的从业者获取第一手，细粒度的技术洞察，帮助他们快速了解最新发展情况(技术趋势，最新热点，技术热点切换方向），从而调整他们的工作方向。
 
-## 功能特性
+## 组件模块
 
-- 定时分析热门GenAI项目（vLLM、SGLang、Dify等）
-- 自动获取HelloGitHub AI相关项目信息
-- 支持流式和阻塞式API调用
-- 完整的错误处理和重试机制
-- 详细的日志记录
+- 信息获取系统（定向抓取整理GenAI相关的数据源上的信息)
+  - github信息
+    - Dify工作流
+      - github_repo_analyze (用于定时运行获取某个repo某日的变更情况)
+      - github_trend_analyze (用于分析github trend页面的热门项目，用于发现值得关注的新项目)
+      - repo_analyze_daily_trigger (用于定时触发github_repo_analyze)
+  - reddit信息（暂无）
+  - youtube信息（暂无）
+- 监控系统
+  - Langfuse 系统（直接配置在Dify的workflow上，用于问题排查)
+- 存贮组件
+  - Dynamodb (用于存贮github_repo_analyze和github_trend_analyze得到的数据，Dify工作流会通过dynamodb插件对其进行读写)
+- 分析系统（自动根据获取+整理的信息推断insight)
+  - Claude Code (用于得到具备深度insight的分析报告)
+  - Claude Skills (用于配置)
 
 ## 安装依赖
 
@@ -28,7 +38,7 @@ uv sync
 
 ```bash
 # 使用UV运行
-uv run python run_tasks.py
+nohup uv run python run_tasks.py > output.log 2>&1 &
 
 # 或直接运行
 python run_tasks.py
@@ -47,7 +57,7 @@ uv run python manual_run.py --date 2025-10-28
 uv run python manual_run.py -d 2025-10-28
 ```
 
-## Analyze API调用示例
+## Dify Analyze API调用示例
 
 ### HelloGitHub日报触发
 
