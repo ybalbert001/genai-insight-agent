@@ -1,0 +1,34 @@
+{
+  "metric_info": {
+    "forks": "11400",
+    "merged_pr_count": "15169",
+    "stars": "63600",
+    "open_pr_count": "1244",
+    "closed_issue_count": "10138",
+    "open_issue_count": "1906"
+  },
+  "collect_date": "2025-11-20",
+  "pr_insight_list": [
+    {
+      "type": "FixBug",
+      "importance": "High",
+      "meaning": "修复了关键的内存泄漏问题，提高系统稳定性"
+    },
+    {
+      "type": "Feat",
+      "importance": "High",
+      "meaning": "添加了新的功能特性，提升用户体验"
+    },
+    {
+      "type": "Perf",
+      "importance": "Medium",
+      "meaning": "优化了性能，提升了处理速度"
+    },
+    {
+      "type": "Test",
+      "importance": "Minor",
+      "meaning": "改进了测试覆盖率"
+    }
+  ],
+  "project_url": "https://github.com/vllm-project/vllm"
+}

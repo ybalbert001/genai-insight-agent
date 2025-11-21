@@ -1,0 +1,94 @@
+{
+  "trend_repos": [
+    {
+      "cumulative_stars": 12494,
+      "description": "Open-source AI agents for penetration testing",
+      "forks": 1151,
+      "incremental_stars": 2935,
+      "is_AI_related_project": true,
+      "is_tutorial_collection": false,
+      "programming_language": "Python",
+      "url": "https://github.com/usestrix/strix"
+    },
+    {
+      "cumulative_stars": 28262,
+      "description": "微舆：人人可用的多Agent舆情分析助手，打破信息茧房，还原舆情原貌，预测未来走向，辅助决策！从0实现，不依赖任何框架。",
+      "forks": 5431,
+      "incremental_stars": 2609,
+      "is_AI_related_project": true,
+      "is_tutorial_collection": false,
+      "programming_language": "Python",
+      "url": "https://github.com/666ghj/BettaFish"
+    },
+    {
+      "cumulative_stars": 18392,
+      "description": "Automate browser based workflows with AI",
+      "forks": 1582,
+      "incremental_stars": 937,
+      "is_AI_related_project": true,
+      "is_tutorial_collection": false,
+      "programming_language": "Python",
+      "url": "https://github.com/Skyvern-AI/skyvern"
+    },
+    {
+      "cumulative_stars": 19714,
+      "description": "NocoBase is the most extensible AI-powered no-code/low-code platform for building business applications and enterprise solutions.",
+      "forks": 2205,
+      "incremental_stars": 398,
+      "is_AI_related_project": true,
+      "is_tutorial_collection": false,
+      "programming_language": "TypeScript",
+      "url": "https://github.com/nocobase/nocobase"
+    },
+    {
+      "cumulative_stars": 19895,
+      "description": "🎯 告别信息过载，AI 助你看懂新闻资讯热点，简单的舆情监控分析 - 多平台热点聚合+基于 MCP 的AI分析工具。监控35个平台（抖音、知乎、B站、华尔街见闻、财联社等），智能筛选+自动推送+AI对话分析（用自然语言深度挖掘新闻：趋势追踪、情感分析、相似检索等13种工具）。支持企业微信/飞书/钉钉/Telegram/邮件/ntfy推送，30秒网页部署，1分钟手机通知，无需编程。支持Docker部署⭐ 让算法为你服务，用AI理解热点",
+      "forks": 11135,
+      "incremental_stars": 12744,
+      "is_AI_related_project": true,
+      "is_tutorial_collection": false,
+      "programming_language": "Python",
+      "url": "https://github.com/sansan0/TrendRadar"
+    },
+    {
+      "cumulative_stars": 38796,
+      "description": "🤖 The free, Open Source alternative to OpenAI, Claude and others. Self-hosted and local-first. Drop-in replacement for OpenAI, running on consumer-grade hardware. No GPU required. Runs gguf, transformers, diffusers and many more. Features: Generate Text, Audio, Video, Images, Voice Cloning, Distributed, P2P and decentralized inference",
+      "forks": 3077,
+      "incremental_stars": 605,
+      "is_AI_related_project": true,
+      "is_tutorial_collection": false,
+      "programming_language": "Go",
+      "url": "https://github.com/mudler/LocalAI"
+    },
+    {
+      "cumulative_stars": 15786,
+      "description": "A Flexible Framework for Experiencing Cutting-edge LLM Inference Optimizations",
+      "forks": 1146,
+      "incremental_stars": 183,
+      "is_AI_related_project": true,
+      "is_tutorial_collection": false,
+      "programming_language": "Python",
+      "url": "https://github.com/kvcache-ai/ktransformers"
+    },
+    {
+      "cumulative_stars": 3059,
+      "description": "The official Go SDK for Model Context Protocol servers and clients. Maintained in collaboration with Google.",
+      "forks": 272,
+      "incremental_stars": 136,
+      "is_AI_related_project": true,
+      "is_tutorial_collection": false,
+      "programming_language": "Go",
+      "url": "https://github.com/modelcontextprotocol/go-sdk"
+    },
+    {
+      "cumulative_stars": 8779,
+      "description": "Memory for AI Agents in 6 lines of code",
+      "forks": 815,
+      "incremental_stars": 431,
+      "is_AI_related_project": true,
+      "is_tutorial_collection": false,
+      "programming_language": "Python",
+      "url": "https://github.com/topoteretes/cognee"
+    }
+  ]
+}
