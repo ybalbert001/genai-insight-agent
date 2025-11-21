@@ -1,5 +1,44 @@
-_logs/
-_cacache
-__pycache__
-_update-notifier-last-checked
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+venv/
+env/
+
+# Environment
 .env
+.env.local
+
+# Node.js / npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+_cacache/
+_logs/
+_update-notifier-last-checked
+
+# npm global installs (root and skills)
+bin/
+lib/
+skills/*/bin/
+skills/*/lib/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# AWS
+.aws/
