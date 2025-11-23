@@ -11,11 +11,13 @@ class DynamoDBManager:
     支持的表:
     - github-insight-raw-data: 存储github_repo_analyze的数据
     - github-trend-repo-candidates: 存储github_trend_analyze的数据
+    - genai-repo-watchlist: 存储项目分级结果
     """
 
     # 支持的表名常量
     TABLE_GITHUB_INSIGHT_RAW_DATA = 'github-insight-raw-data'
     TABLE_GITHUB_TREND_REPO_CANDIDATES = 'github-trend-repo-candidates'
+    TABLE_GENAI_REPO_WATCHLIST = 'genai-repo-watchlist'
 
     def __init__(self, table_name='github-insight-raw-data', region_name='us-east-1'):
         """
@@ -34,18 +36,37 @@ class DynamoDBManager:
         """
         创建DynamoDB表
 
-        两个表使用相同的schema:
+        github-insight-raw-data 和 github-trend-repo-candidates 使用:
         - 分区键: project_url (String)
         - 排序键: collect_date (String)
+
+        genai-repo-watchlist 使用:
+        - 分区键: project_url (String)
+        - 无排序键（每个repo只保留一条记录）
+
         - 计费模式: PAY_PER_REQUEST（按需付费）
 
         Returns:
             bool: 成功返回True（包括表已存在的情况），失败返回False
         """
         try:
-            table = self.dynamodb.create_table(
-                TableName=self.table_name,
-                KeySchema=[
+            # genai-repo-watchlist 表不使用 sort key
+            if self.table_name == self.TABLE_GENAI_REPO_WATCHLIST:
+                key_schema = [
+                    {
+                        'AttributeName': 'project_url',
+                        'KeyType': 'HASH'  # 分区键
+                    }
+                ]
+                attribute_definitions = [
+                    {
+                        'AttributeName': 'project_url',
+                        'AttributeType': 'S'  # String类型
+                    }
+                ]
+            else:
+                # 其他表使用 partition key + sort key
+                key_schema = [
                     {
                         'AttributeName': 'project_url',
                         'KeyType': 'HASH'  # 分区键
@@ -54,8 +75,8 @@ class DynamoDBManager:
                         'AttributeName': 'collect_date',
                         'KeyType': 'RANGE'  # 排序键
                     }
-                ],
-                AttributeDefinitions=[
+                ]
+                attribute_definitions = [
                     {
                         'AttributeName': 'project_url',
                         'AttributeType': 'S'  # String类型
@@ -64,7 +85,12 @@ class DynamoDBManager:
                         'AttributeName': 'collect_date',
                         'AttributeType': 'S'  # String类型
                     }
-                ],
+                ]
+
+            table = self.dynamodb.create_table(
+                TableName=self.table_name,
+                KeySchema=key_schema,
+                AttributeDefinitions=attribute_definitions,
                 BillingMode='PAY_PER_REQUEST'  # 按需付费模式
             )
 
@@ -84,13 +110,13 @@ class DynamoDBManager:
                 print(f"创建表 {self.table_name} 时出错: {e}")
                 return False
     
-    def put_item(self, project_url, collect_date, other_attributes=None):
+    def put_item(self, project_url, collect_date=None, other_attributes=None):
         """
         向表中添加项目
 
         Args:
             project_url: 项目URL（分区键）
-            collect_date: 收集日期（排序键）
+            collect_date: 收集日期（排序键）- genai-repo-watchlist 表不需要此参数
             other_attributes: 其他属性字典，默认为None
 
         Returns:
@@ -101,27 +127,36 @@ class DynamoDBManager:
 
         item = {
             'project_url': project_url,
-            'collect_date': collect_date,
         }
+
+        # genai-repo-watchlist 表不使用 collect_date
+        if self.table_name != self.TABLE_GENAI_REPO_WATCHLIST:
+            if collect_date is None:
+                print(f"错误: 表 {self.table_name} 需要 collect_date 参数")
+                return False
+            item['collect_date'] = collect_date
 
         if other_attributes:
             item.update(other_attributes)
 
         try:
             self.table.put_item(Item=item)
-            print(f"成功添加项目到表 {self.table_name}: {project_url} (日期: {collect_date})")
+            if self.table_name == self.TABLE_GENAI_REPO_WATCHLIST:
+                print(f"成功添加/更新项目到表 {self.table_name}: {project_url}")
+            else:
+                print(f"成功添加项目到表 {self.table_name}: {project_url} (日期: {collect_date})")
             return True
         except ClientError as e:
             print(f"添加项目到表 {self.table_name} 时出错: {e}")
             return False
     
-    def get_item(self, project_url, collect_date):
+    def get_item(self, project_url, collect_date=None):
         """
         获取指定项目的数据
 
         Args:
             project_url: 项目URL（分区键）
-            collect_date: 收集日期（排序键）
+            collect_date: 收集日期（排序键）- genai-repo-watchlist 表不需要此参数
 
         Returns:
             dict: 项目数据字典，如果不存在或出错则返回None
@@ -130,17 +165,31 @@ class DynamoDBManager:
             self.table = self.dynamodb.Table(self.table_name)
 
         try:
-            response = self.table.get_item(
-                Key={
+            # genai-repo-watchlist 表不使用 collect_date
+            if self.table_name == self.TABLE_GENAI_REPO_WATCHLIST:
+                key = {'project_url': project_url}
+            else:
+                if collect_date is None:
+                    print(f"错误: 表 {self.table_name} 需要 collect_date 参数")
+                    return None
+                key = {
                     'project_url': project_url,
                     'collect_date': collect_date
                 }
-            )
+
+            response = self.table.get_item(Key=key)
             item = response.get('Item')
+
             if item:
-                print(f"成功获取项目数据: {project_url} (日期: {collect_date})")
+                if self.table_name == self.TABLE_GENAI_REPO_WATCHLIST:
+                    print(f"成功获取项目数据: {project_url}")
+                else:
+                    print(f"成功获取项目数据: {project_url} (日期: {collect_date})")
             else:
-                print(f"未找到项目数据: {project_url} (日期: {collect_date})")
+                if self.table_name == self.TABLE_GENAI_REPO_WATCHLIST:
+                    print(f"未找到项目数据: {project_url}")
+                else:
+                    print(f"未找到项目数据: {project_url} (日期: {collect_date})")
             return item
         except ClientError as e:
             print(f"从表 {self.table_name} 获取项目时出错: {e}")
@@ -218,13 +267,13 @@ class DynamoDBManager:
             print(f"从表 {self.table_name} 扫描数据时出错: {e}")
             return []
 
-    def delete_item(self, project_url, collect_date):
+    def delete_item(self, project_url, collect_date=None):
         """
         删除指定项目
 
         Args:
             project_url: 项目URL（分区键）
-            collect_date: 收集日期（排序键）
+            collect_date: 收集日期（排序键）- genai-repo-watchlist 表不需要此参数
 
         Returns:
             bool: 成功返回True，失败返回False
@@ -233,13 +282,24 @@ class DynamoDBManager:
             self.table = self.dynamodb.Table(self.table_name)
 
         try:
-            self.table.delete_item(
-                Key={
+            # genai-repo-watchlist 表不使用 collect_date
+            if self.table_name == self.TABLE_GENAI_REPO_WATCHLIST:
+                key = {'project_url': project_url}
+            else:
+                if collect_date is None:
+                    print(f"错误: 表 {self.table_name} 需要 collect_date 参数")
+                    return False
+                key = {
                     'project_url': project_url,
                     'collect_date': collect_date
                 }
-            )
-            print(f"成功删除项目: {project_url} (日期: {collect_date})")
+
+            self.table.delete_item(Key=key)
+
+            if self.table_name == self.TABLE_GENAI_REPO_WATCHLIST:
+                print(f"成功删除项目: {project_url}")
+            else:
+                print(f"成功删除项目: {project_url} (日期: {collect_date})")
             return True
         except ClientError as e:
             print(f"从表 {self.table_name} 删除项目时出错: {e}")
@@ -258,23 +318,32 @@ def main():
   # 获取单个项目数据（使用默认表 github-insight-raw-data）
   python dynamodb_manager.py get https://github.com/vllm-project/vllm 2025-01-15
 
-  # 查询历史数据（指定表）
+  # 获取 genai-repo-watchlist 表的数据（不需要日期）
+  python dynamodb_manager.py --table genai-repo-watchlist get https://github.com/vllm-project/vllm
+
+  # 查询历史数据（指定表，不支持 genai-repo-watchlist）
   python dynamodb_manager.py --table github-trend-repo-candidates query https://github.com/vllm-project/vllm --start 2025-01-01 --end 2025-01-07
 
-  # 添加数据
+  # 添加数据到 github-insight-raw-data
   python dynamodb_manager.py put https://github.com/vllm-project/vllm 2025-01-15 --data '{"stars": 60500}'
+
+  # 添加/更新数据到 genai-repo-watchlist（不需要日期，会覆盖现有记录）
+  python dynamodb_manager.py --table genai-repo-watchlist put https://github.com/vllm-project/vllm --data '{"priority": "high"}'
 
   # 扫描表数据
   python dynamodb_manager.py --table github-trend-repo-candidates scan --limit 10
 
   # 删除数据
   python dynamodb_manager.py delete https://github.com/vllm-project/vllm 2025-01-15
+
+  # 删除 genai-repo-watchlist 表的数据（不需要日期）
+  python dynamodb_manager.py --table genai-repo-watchlist delete https://github.com/vllm-project/vllm
         """
     )
 
     # 全局参数
     parser.add_argument('--table', default='github-insight-raw-data',
-                       choices=['github-insight-raw-data', 'github-trend-repo-candidates'],
+                       choices=['github-insight-raw-data', 'github-trend-repo-candidates', 'genai-repo-watchlist'],
                        help='表名 (默认: github-insight-raw-data)')
     parser.add_argument('--region', default='us-east-1',
                        help='AWS区域 (默认: us-east-1)')
@@ -288,11 +357,11 @@ def main():
     # get 命令
     get_parser = subparsers.add_parser('get', help='获取单个项目数据')
     get_parser.add_argument('project_url', help='项目URL')
-    get_parser.add_argument('collect_date', help='收集日期 (YYYY-MM-DD)')
+    get_parser.add_argument('collect_date', nargs='?', help='收集日期 (YYYY-MM-DD) - genai-repo-watchlist 表不需要')
     get_parser.add_argument('--json', action='store_true', help='以JSON格式输出')
 
     # query 命令
-    query_parser = subparsers.add_parser('query', help='查询项目历史数据')
+    query_parser = subparsers.add_parser('query', help='查询项目历史数据（不支持 genai-repo-watchlist 表）')
     query_parser.add_argument('project_url', help='项目URL')
     query_parser.add_argument('--start', help='开始日期 (YYYY-MM-DD)')
     query_parser.add_argument('--end', help='结束日期 (YYYY-MM-DD)')
@@ -301,7 +370,7 @@ def main():
     # put 命令
     put_parser = subparsers.add_parser('put', help='添加或更新项目数据')
     put_parser.add_argument('project_url', help='项目URL')
-    put_parser.add_argument('collect_date', help='收集日期 (YYYY-MM-DD)')
+    put_parser.add_argument('collect_date', nargs='?', help='收集日期 (YYYY-MM-DD) - genai-repo-watchlist 表不需要')
     put_parser.add_argument('--data', required=True, help='JSON格式的数据')
     put_parser.add_argument('--file', help='从文件读取JSON数据')
 
@@ -313,7 +382,7 @@ def main():
     # delete 命令
     delete_parser = subparsers.add_parser('delete', help='删除项目数据')
     delete_parser.add_argument('project_url', help='项目URL')
-    delete_parser.add_argument('collect_date', help='收集日期 (YYYY-MM-DD)')
+    delete_parser.add_argument('collect_date', nargs='?', help='收集日期 (YYYY-MM-DD) - genai-repo-watchlist 表不需要')
     delete_parser.add_argument('--confirm', action='store_true', help='跳过确认提示')
 
     args = parser.parse_args()
@@ -346,6 +415,12 @@ def main():
                 sys.exit(1)
 
         elif args.command == 'query':
+            # genai-repo-watchlist 表不支持 query 操作
+            if args.table == 'genai-repo-watchlist':
+                print(f"错误: genai-repo-watchlist 表不支持 query 操作")
+                print(f"提示: 使用 'get' 命令获取单个项目数据，或使用 'scan' 命令浏览所有数据")
+                sys.exit(1)
+
             items = manager.query_items(args.project_url, args.start, args.end)
             if args.json:
                 print(json.dumps(items, indent=2, default=str))
@@ -381,7 +456,10 @@ def main():
 
         elif args.command == 'delete':
             if not args.confirm:
-                response = input(f"确认删除 {args.project_url} (日期: {args.collect_date})? [y/N]: ")
+                if args.table == 'genai-repo-watchlist':
+                    response = input(f"确认删除 {args.project_url}? [y/N]: ")
+                else:
+                    response = input(f"确认删除 {args.project_url} (日期: {args.collect_date})? [y/N]: ")
                 if response.lower() != 'y':
                     print("操作已取消")
                     sys.exit(0)

@@ -38,6 +38,9 @@ GenAI项目洞察分析代理，用于自动化分析GitHub项目。分析的主
   - 与Azure，Google Cloud, Ali Cloud等的集成
 - 开放性Insight
   - 自动根据AI圈的热词来分析当前这些repo中比较前瞻的信号
+- 自动发现新兴的repo
+  - 根据一定客观的准入规则纳入重点分析的开源项目池
+  - 对照本项目的根本目标来定性的判断是否值得持续关注
 
 
 ## Dynamodb表定义
@@ -67,5 +70,34 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 安装项目依赖
 uv sync
+```
+
+## 手动维护观察池中的genai repos
+
+- 创建对应dynamodb 表
+```bash
+python3 .claude/skills/genai-rawdata-retriever/scripts/dynamodb_manager.py --table genai-repo-watchlist --region us-east-1 create-table
+```
+
+- 添加人工指定的repos
+```bash
+#!/bin/bash
+
+repos=(
+  "github.com/vllm-project/vllm"
+  "github.com/sgl-project/sglang"
+  "github.com/langgenius/dify"
+  "github.com/cline/cline"
+  "github.com/BerriAI/litellm"
+  "github.com/hiyouga/LLaMA-Factory"
+)
+
+for repo in "${repos[@]}"; do
+  python3 .claude/skills/genai-rawdata-retriever/scripts/dynamodb_manager.py \
+    --table genai-repo-watchlist \
+    --region us-east-1 \
+    put "$repo" 2025-11-23 \
+    --data '{"priority": "human-P0"}'
+done
 ```
 

@@ -96,6 +96,54 @@ python scripts/dynamodb_manager.py --table github-trend-repo-candidates query \
   --json
 ```
 
+## Table: genai-repo-watchlist
+
+Repository priority classification results from github-trend-repo-candidates.
+
+### Keys
+- **project_url** (String, Partition Key): Full GitHub repository URL
+  - Example: `https://github.com/vllm-project/vllm`
+
+**Note**: This table does not use a sort key. Each repository has only one record that gets updated (overwritten) each time the classification is performed.
+
+### Attributes
+- **priority** (String): Priority/tier level of the repository
+  - Example values: `high`, `medium`, `low`, `P0`, `P1`, `P2`, etc.
+- **last_updated** (String, Optional): Timestamp of the last update
+  - Example: `2025-11-20T12:34:56Z`
+
+### Example Item
+
+```json
+{
+  "project_url": "https://github.com/vllm-project/vllm",
+  "priority": "high",
+  "last_updated": "2025-11-20T12:34:56Z"
+}
+```
+
+### Example Query Patterns
+
+#### Get repository priority
+```bash
+python scripts/dynamodb_manager.py --table genai-repo-watchlist get \
+  https://github.com/owner/repo \
+  --json
+```
+
+#### Add or update classification
+```bash
+python scripts/dynamodb_manager.py --table genai-repo-watchlist put \
+  https://github.com/owner/repo \
+  --data '{"priority": "high"}'
+```
+
+#### Scan all repositories in watchlist
+```bash
+python scripts/dynamodb_manager.py --table genai-repo-watchlist scan \
+  --json
+```
+
 ## Data Types Note
 
 All numeric values are stored as **strings** in DynamoDB. Convert to integers/floats when performing calculations:

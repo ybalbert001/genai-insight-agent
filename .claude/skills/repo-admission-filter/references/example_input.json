@@ -1,0 +1,46 @@
+[
+  {
+    "collect_date": "2025-11-21",
+    "cumulative_stars": "15822",
+    "forks": "1147",
+    "incremental_stars": "176",
+    "programming_language": "Python",
+    "project_url": "https://github.com/kvcache-ai/ktransformers",
+    "is_tutorial_collection": false,
+    "description": "A Flexible Framework for Experiencing Cutting-edge LLM Inference Optimizations",
+    "is_AI_related_project": true
+  },
+  {
+    "collect_date": "2025-11-21",
+    "cumulative_stars": "22085",
+    "forks": "12065",
+    "incremental_stars": "11411",
+    "programming_language": "Python",
+    "project_url": "https://github.com/sansan0/TrendRadar",
+    "is_tutorial_collection": false,
+    "description": "🎯 告别信息过载，AI 助你看懂新闻资讯热点，简单的舆情监控分析",
+    "is_AI_related_project": true
+  },
+  {
+    "collect_date": "2025-11-21",
+    "cumulative_stars": "8903",
+    "forks": "823",
+    "incremental_stars": "414",
+    "programming_language": "Python",
+    "project_url": "https://github.com/topoteretes/cognee",
+    "is_tutorial_collection": false,
+    "description": "Memory for AI Agents in 6 lines of code",
+    "is_AI_related_project": true
+  },
+  {
+    "collect_date": "2025-11-21",
+    "cumulative_stars": "3100",
+    "forks": "275",
+    "incremental_stars": "154",
+    "programming_language": "Go",
+    "project_url": "https://github.com/modelcontextprotocol/go-sdk",
+    "is_tutorial_collection": false,
+    "description": "The official Go SDK for Model Context Protocol servers and clients. Maintained in collaboration with Google.",
+    "is_AI_related_project": true
+  }
+]
