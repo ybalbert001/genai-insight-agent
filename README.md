@@ -96,7 +96,7 @@ for repo in "${repos[@]}"; do
   python3 .claude/skills/genai-rawdata-retriever/scripts/dynamodb_manager.py \
     --table genai-repo-watchlist \
     --region us-east-1 \
-    put "$repo" 2025-11-23 \
+    put "$repo" \
     --data '{"priority": "human-P0"}'
 done
 ```
