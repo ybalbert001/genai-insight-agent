@@ -61,47 +61,103 @@ python3 .claude/skills/genai-insight-reporter/scripts/report_generator.py \
 
 ## 分析目标
 
-- 列举知名开源Repo的重要更新
-  - 重要Feature更新
-  - 云厂商集成更新(与Azure，Google Cloud, Ali Cloud等的集成)
-- 开源Repo的社区活跃度指标
-  - 分析任务启动当天开始近15天的PR总量和Merged PR新增数量变化趋势
-  - 分析任务启动当天开始近15天的Open Issue新增数量变化趋势
-  - 分析任务启动当天开始近15天的Star新增数量变化趋势
-  - 从上述的数据中获取关于社区趋势的解读
-- 开放性Insight(标准较高，给出的时候添加confidence tag[高，中，低])
-  - 自动根据 https://tldr.tech/ai/{date} 前一周的内容，来提取一些关键的AI信息
-  - 结合前一步的AI信息，尝试找到当前这些repo中有关联的变更，提取有价值Insight
+### 1. 重要更新追踪
+#### 1.1 Feature更新
+- 筛选条件：`type="Feat"` 且 `importance="High"`
+- 时间范围：最近1天数据
+- 输出限制：总计不超过5条，单个repo不超过3条
+
+#### 1.2 云厂商集成更新
+- 关注服务：AWS Bedrock/SageMaker、Azure AI、Google Cloud AI、Ali Cloud AI等GenAI相关服务
+- 时间范围：最近1天数据
+- 排除内容：重构类、文档类更新
+
+### 2. 社区活跃度分析
+#### 2.1 统计指标（近15天趋势）
+- **新增PR总量** = (open_pr + merged_pr)的日增量
+- **新增Merged PR数量** = merged_pr的日增量
+- **新增Open Issue数量** = (open_issue + closed_issue)的日增量
+- **新增Star数量** = star的日增量
+
+#### 2.2 社区项目趋势解读
+- **项目维护水平** = Merged PRs / New PRs（接近1为佳）
+- **社区参与度** = Issues vs PRs（反映用户/贡献者比例）
+- **项目关注度** = Star增长趋势
+- **领域热度** = 跨项目横向对比（LLM推理引擎、LLM开发平台、垂直Agent、模型微调、LLM网关等）
+
+### 3. 开放性Insight（需标注置信度）
+- 提取 https://tldr.tech/ai/{前7天日期} 的AI行业关键信息
+- 关联repos中的相关变更
+- 输出格式：**[置信度：高/中/低]** Insight内容
+
+---
 
 ## 分析要求
 
-- 【分析数据范围】
-  - DynamoDB中包含了所需数据，仅仅考虑priority='Human-P0'的repos, 其他的不纳入分析。
-  - 统计数据部分，考虑近15天的全部数据，不一定有15天内的全部数据，需要能适应数据部分缺失的情况。数据也可能出现错误，如果某天的数据超出了15天内所有数据均值的3倍，则丢掉当前数据点
-  - 重要Feature更新部分，仅仅考虑最近一天的数据，假设当日为2025-12-05，那么考虑最近一天(2025-12-05或者2025-12-04)的数据的更新。
-  - 云厂商集成更新部分，也仅仅考虑最近一天的数据，假设当日为2025-12-05，那么考虑最近一天(2025-12-05或者2025-12-04)的数据的更新。
-- 【数据利用注意事项】
-  - 需要利用raw data中的一些标签，比如某Pull request的属性中{"type":"Feat"，"importance":"High"}一般认为重要，其他比如type为FixBug, Doc, importance不是High的一般认为不重要，不作为Repo的重要更新纳入报告。
-  - 云厂商集成更新部分，无需关注"重构"，"文档相关"的这类更新。
-  - 统计数据解读方面
-    - 项目健康度 = Merged PRs / New PRs 比值, 比值接近1：代码审查快，项目活跃，比值过低：可能存在积压。
-    - 社区参与度 = Issues vs PRs 比例, Issue多于PR：用户多于贡献者, PR多于Issue：开发驱动型项目。
-    - Star数量代表了项目的知名度
-    - 这些项目一般来自不同的领域知名项目，包括LLM推理引擎，低代码LLM应用开发平台，垂直Agent项目(如Vibe Coding), LLM Finetune平台， LLM网关和代理平台等，对应的数据体现了社区对这些领域的关注情况
-- 【展现形式】
-  - 客观数据最好用图表展示，图不要太大，多个子图网格排列，可使用matplotlib生成图表，采用学术论文风格和配色。
-  - 新增Merged PR/新增PR的占比需要有比较直观的体现，由于分析周期为近15天，建议每天的一个数据采样点，从时间维度进行纵向对比。
-  - 需要从“新增PR数量”，“新增Merged PR数量”， “新增Open Issue数量”三个维度展现，其中新增PR总数 = (open_pr + merged_pr)的增量， 新增Merged PR数 = merged_pr的增量， 新增Issue数 = (open_issue + closed_issue)的增量。不同repo在同一个维度子图上进行横向对比，注意指标是每日增量，你需要自己计算日间差值。注意这个差值应该是正数，如果是0说明当前数值缺失，应该丢弃该数据点。
-  - 每个更新的描述，需要尽可能保留技术术语，长度做简化，重点放在解释清楚其意义。
-- 【篇幅长度】
-  - 尽可能短，只需要最有信息量的内容，降低读者的阅读负担。
+### 1. 数据范围
+| 维度 | 筛选条件 | 时间窗口 |
+|------|---------|---------|
+| 仓库范围 | `priority='Human-P0'` | - |
+| 统计趋势 | 近15天全量数据 | 15天 |
+| Feature更新 | 最新数据 | 1天（当日或前1日）|
+| 云厂商集成 | 最新数据 | 1天（当日或前1日）|
+
+### 2. 数据处理规则
+#### 2.1 异常值处理
+- 若某天数据 > 15天均值的3倍 → 丢弃该数据点
+- 若日增量 ≤ 0 → 丢弃该数据点（视为缺失）
+
+#### 2.2 重要性判定
+```
+✅ 纳入报告：type="Feat" AND importance="High"
+❌ 不纳入：type in ["FixBug", "Doc"] OR importance != "High"
+```
+
+#### 2.3 增量计算逻辑
+```python
+# 日增量 = 当日累计值 - 前日累计值
+daily_new_prs = (open_pr_today + merged_pr_today) - (open_pr_yesterday + merged_pr_yesterday)
+daily_merged = merged_pr_today - merged_pr_yesterday
+daily_issues = (open_issue_today + closed_issue_today) - (open_issue_yesterday + closed_issue_yesterday)
+```
+
+### 3. 展现形式
+#### 3.1 图表要求
+- **工具**：matplotlib
+- **风格**：学术论文风格配色
+- **布局**：多子图网格排列，尺寸适中
+- **结构**：4个维度子图（新增PR / 新增Merged PR / 新增Issue / 新增Star），每个子图包含所有repos的对比
+
+#### 3.2 可视化重点
+```
+子图1: 新增PR数量趋势（15个采样点，多repo横向对比）
+子图2: 新增Merged PR数量趋势（同上）
+子图3: 新增Open Issue数量趋势（同上）
+子图4: 新增star数量趋势（同上）
+```
+
+#### 3.3 文字描述规范
+- ✅ 保留技术术语原文（如Transformer、inference、fine-tuning）
+- ❌ 避免过度翻译专业词汇
+- ✅ 简化冗余表述，聚焦核心价值, 尽可能短，只需要最有信息量的内容，降低读者的阅读负担.
   - 重要Feature更新部分，总体上不要超过5条，每个repo不要超过3条，你需要从报告根本目的出发来挑选最有价值的Feature更新。
   - 与云厂商的集成部分，总体条数不做限制，但仅仅关注与GenAI相关的服务，以AWS举例，主要关注Bedrock/SageMaker等AI相关服务。
-- 【语言要求】
-  - 报告文字为中文。但是技术术语不要翻译。
-- 【输出位置】
-  - 报告输出到report_output/目录，文件命名格式为 GenAI_Insight_Report_{date}.md。
-  - 报告引用的图片存在到report_output/images/。
+
+### 4. 输出规范
+#### 4.1 文件结构
+```
+report_output/
+├── GenAI_Insight_Report_{YYYY-MM-DD}.md
+└── images/
+    ├── activity_trends.png
+    └── ...
+```
+
+#### 4.2 语言要求
+- 报告正文：中文
+- 技术术语：英文原文
+- 示例："该PR实现了vLLM的prefix caching优化"
+
 
 ## Dynamodb表定义
 
