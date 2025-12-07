@@ -1,36 +1,26 @@
 # GenAI Insight Report - {DATE}
 
+## 数据来源
+> https://github.com ([project_1](project_link_1), [project_2](project_link_2) ...)
+>
+> https://tldr.tech/ai/
+
 ## 1. 重点项目更新 (Priority Repo Updates)
 
 ### 1.1 {项目名称} (owner/repo)
 
-**项目概述**: {简短描述项目定位和作用}
-
-#### 重要功能更新
-
-**{Feature标题}**
+**{Feature标题}** 
 - **PR**: #{PR编号} - {PR标题}
-- **类型**: Feat | 重要性: High
-- **技术要点**:
-  - {要点1}
-  - {要点2}
-- **影响范围**: {描述对用户/生态的影响}
-- **相关链接**: {PR URL}
+- **描述**: {技术表述}， **影响范围**: {描述对用户/生态的影响}， 
 
-**{Feature标题}**
-- **PR**: #{PR编号} - {PR标题}
-- **类型**: Feat | 重要性: High
-- **技术要点**: {描述}
-- **影响范围**: {描述}
+...
 
-#### 云厂商集成进展
+## 2. 云厂商集成进展
 
-| 云平台 | 集成状态 | 更新内容 | PR链接 |
-|--------|---------|----------|--------|
-| Azure | ✅ 已集成 / 🔄 进行中 / ❌ 未集成 | {更新描述} | {链接} |
-| Google Cloud | {状态} | {更新描述} | {链接} |
-| Ali Cloud | {状态} | {更新描述} | {链接} |
-| AWS | {状态} | {更新描述} | {链接} |
+### 2.1 {项目名称} (owner/repo)
+
+**[Cloud AI Provider] update description(Amazon Titan Image Generator v2 Support)**
+...
 
 ---
 
@@ -38,13 +28,15 @@
 
 [[ matplotlib_plot_placeholder ]]
 
-[[ 解读部分 ]]
+**[[ 解读部分 ]] (for example: XX/YY/ZZ项目 活跃度较高，反应方面收到业界关注，应用范围较广， AA/BB项目活跃度较低，业界关注下降)**
 
 ---
 
 ## 3. 前瞻性信号 (Emerging Signals)
 
-[[ placeholder ]]
+[[ tldr.tech/ai 的重点简讯 ]]
+
+[[ github 变更与这些重点相呼应的Insight ]]
 
 ---
 
