@@ -9,14 +9,10 @@
 
 {% if features_by_repo %}
 {% for repo_info in features_by_repo %}
-### {{ repo_info.section_number }} {{ repo_info.repo_name }} ({{ repo_info.repo_full_name }})
+#### {{ repo_info.section_number }} {{ repo_info.repo_name }} ({{ repo_info.repo_full_name }})
 
 {% for feature in repo_info.features %}
-**{{ feature.title }}**
-{% if feature.pr_number and feature.pr_url %}
-- **PR**: [#{{ feature.pr_number }}]({{ feature.pr_url }}){% if feature.pr_title %} - {{ feature.pr_title }}{% endif +%}
-{% endif +%}
-- **描述**: {{ feature.description }}
+**[#{{ feature.pr_number }}]({{ feature.pr_url }})** - {{ feature.description }}
 
 {% endfor %}
 {% endfor %}
@@ -29,14 +25,10 @@
 
 {% if cloud_integrations_by_repo %}
 {% for repo_info in cloud_integrations_by_repo %}
-### {{ repo_info.section_number }} {{ repo_info.repo_name }} ({{ repo_info.repo_full_name }})
+#### {{ repo_info.section_number }} {{ repo_info.repo_name }} ({{ repo_info.repo_full_name }})
 
 {% for integration in repo_info.integrations %}
-**[{{ integration.cloud_provider }}] {{ integration.title }}**
-{% if integration.pr_number and integration.pr_url %}
-- **PR**: [#{{ integration.pr_number }}]({{ integration.pr_url }}){% if integration.pr_title %} - {{ integration.pr_title }}{% endif +%}
-{% endif +%}
-- {{ integration.description }}
+**[{{ integration.cloud_provider }}] - [#{{ integration.pr_number }}]({{ integration.pr_url }})** - {{ integration.description }}
 
 {% endfor %}
 {% endfor %}
@@ -53,18 +45,6 @@
 
 **分析周期**: 近{{ analysis_days }}天 ({{ analysis_start_date }} 至 {{ analysis_end_date }})
 
-{% if metrics_summary %}
-### 社区指标摘要
-
-| 项目 | 日均新增PR | 日均Merged PR | 日均新增Issue | Star总量 |
-|------|-----------|--------------|--------------|----------|
-{% for metrics in metrics_summary -%}
-| {{ metrics.repo }} | {{ metrics.avg_daily_pr }} | {{ metrics.avg_daily_merged }} | {{ metrics.avg_daily_issues }} | {{ '{:,}'.format(metrics.current_stars) }} |
-{% endfor %}
-
-{% endif %}
-
-**解读**:
 {% if interpretation %}
 {{ interpretation }}
 {% else %}

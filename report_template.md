@@ -9,18 +9,17 @@
 
 ### 1.1 {项目名称} (owner/repo)
 
-**{Feature标题}** 
-- **PR**: #{PR编号} - {PR标题}
-- **描述**: {技术表述}， **影响范围**: {描述对用户/生态的影响}， 
+**[{PR编号}]({PR_LINK})** - {技术表述} {影响范围(描述对用户/生态的影响)}
 
 ...
 
 ## 2. 云厂商集成进展
 
-### 2.1 {项目名称} (owner/repo)
+#### 2.1 {项目名称} (owner/repo)
 
-**[Cloud AI Provider] update description(Amazon Titan Image Generator v2 Support)**
+**[{Cloud AI Provider} - [{PR编号}]({PR_LINK})]** - {技术表述} {影响范围(描述对用户/生态的影响)}
 ...
+
 
 ---
 
