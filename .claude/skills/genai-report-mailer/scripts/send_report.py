@@ -170,7 +170,7 @@ class ReportMailer:
         return re.sub(img_pattern, replace_img, html)
 
     def _get_geek_style_css(self):
-        """Get geek-style CSS for email HTML"""
+        """Get Claude Code style CSS using Anthropic brand colors - Light Theme"""
         return """
         * {
             margin: 0;
@@ -179,177 +179,264 @@ class ReportMailer:
         }
 
         body {
-            background-color: #0d1117;
-            color: #c9d1d9;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 14px;
-            line-height: 1.6;
-            padding: 20px;
+            background: linear-gradient(180deg, #f7f5f0 0%, #faf9f5 50%, #f7f5f0 100%);
+            color: #2a2825;
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 16px;
+            line-height: 1.75;
+            padding: 60px 20px;
+            min-height: 100vh;
         }
 
         .container {
             max-width: 900px;
             margin: 0 auto;
-            background-color: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            padding: 30px;
+            background: #ffffff;
+            border: 1px solid #e8e6dc;
+            border-radius: 12px;
+            padding: 56px;
+            box-shadow:
+                0 1px 3px rgba(0, 0, 0, 0.05),
+                0 8px 24px rgba(0, 0, 0, 0.08);
+            position: relative;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(217, 119, 87, 0.2) 50%,
+                transparent 100%);
         }
 
         h1 {
-            color: #58a6ff;
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #21262d;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #d97757;
+            font-size: 42px;
+            font-weight: 600;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(217, 119, 87, 0.25);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            letter-spacing: -0.8px;
+            line-height: 1.15;
         }
 
         h2 {
-            color: #f85149;
-            font-size: 24px;
-            font-weight: bold;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #d97757;
+            font-size: 30px;
+            font-weight: 600;
+            margin-top: 48px;
+            margin-bottom: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            letter-spacing: -0.5px;
+            line-height: 1.25;
+            position: relative;
+            padding-left: 16px;
+        }
+
+        h2::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(180deg, #d97757 0%, rgba(217, 119, 87, 0.3) 100%);
+            border-radius: 2px;
         }
 
         h3 {
-            color: #56d364;
-            font-size: 20px;
-            font-weight: bold;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #5286b8;
+            font-size: 22px;
+            font-weight: 600;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            line-height: 1.35;
+            letter-spacing: -0.3px;
         }
 
         h4 {
-            color: #ffa657;
+            color: #657a4a;
             font-size: 18px;
-            font-weight: bold;
-            margin-top: 15px;
-            margin-bottom: 10px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 600;
+            margin-top: 28px;
+            margin-bottom: 12px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            line-height: 1.4;
+            letter-spacing: -0.2px;
         }
 
         p {
-            margin-bottom: 15px;
+            margin-bottom: 18px;
+            color: #3a3731;
+            line-height: 1.8;
         }
 
         blockquote {
-            border-left: 4px solid #58a6ff;
-            padding-left: 15px;
-            margin: 15px 0;
-            color: #8b949e;
+            border-left: 3px solid #d97757;
+            margin: 28px 0;
+            color: #6b6962;
+            background: linear-gradient(135deg, rgba(247, 245, 240, 0.8) 0%, rgba(250, 249, 245, 0.5) 100%);
+            padding: 20px 20px 20px 24px;
+            border-radius: 6px;
+        }
+
+        blockquote p {
+            margin-bottom: 8px;
+            color: #6b6962;
+        }
+
+        blockquote p:last-child {
+            margin-bottom: 0;
         }
 
         a {
-            color: #58a6ff;
+            color: #5286b8;
             text-decoration: none;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid transparent;
         }
 
         a:hover {
-            text-decoration: underline;
+            color: #3a6a96;
+            border-bottom-color: rgba(82, 134, 184, 0.3);
         }
 
         strong {
-            color: #f0f6fc;
-            font-weight: bold;
+            color: #141413;
+            font-weight: 700;
         }
 
         code {
-            background-color: #0d1117;
-            color: #ff7b72;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
-            font-size: 13px;
+            background: rgba(232, 230, 220, 0.6);
+            color: #c55a3a;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 14px;
+            border: 1px solid rgba(217, 119, 87, 0.2);
+            letter-spacing: -0.3px;
         }
 
         pre {
-            background-color: #0d1117;
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            padding: 15px;
+            background: #f7f5f0;
+            border: 1px solid #e8e6dc;
+            border-radius: 8px;
+            padding: 24px;
             overflow-x: auto;
-            margin: 15px 0;
+            margin: 24px 0;
         }
 
         pre code {
             background-color: transparent;
             padding: 0;
+            border: none;
+            color: #3a3731;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0;
-            background-color: #0d1117;
-            border: 1px solid #30363d;
+            margin: 28px 0;
+            background: #fefefe;
+            border: 1px solid #e8e6dc;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
         th {
-            background-color: #21262d;
-            color: #58a6ff;
-            padding: 12px;
+            background: linear-gradient(180deg, #f7f5f0 0%, #f2f0eb 100%);
+            color: #d97757;
+            padding: 16px 18px;
             text-align: left;
-            font-weight: bold;
-            border: 1px solid #30363d;
+            font-weight: 600;
+            border-bottom: 2px solid rgba(217, 119, 87, 0.25);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            font-size: 14px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
         }
 
         td {
-            padding: 10px 12px;
-            border: 1px solid #30363d;
+            padding: 14px 18px;
+            border-bottom: 1px solid #f0eeeb;
+            color: #3a3731;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
         }
 
         tr:hover {
-            background-color: #161b22;
+            background-color: rgba(247, 245, 240, 0.5);
         }
 
         img {
             max-width: 100%;
             height: auto;
             display: block;
-            margin: 20px auto;
-            border-radius: 6px;
-            border: 1px solid #30363d;
+            margin: 40px auto;
+            border-radius: 10px;
+            border: 1px solid #e8e6dc;
+            box-shadow:
+                0 4px 12px rgba(0, 0, 0, 0.08),
+                0 1px 3px rgba(0, 0, 0, 0.04);
         }
 
         hr {
             border: none;
-            border-top: 1px solid #21262d;
-            margin: 30px 0;
+            height: 1px;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(176, 174, 165, 0.3) 20%,
+                rgba(176, 174, 165, 0.3) 80%,
+                transparent 100%);
+            margin: 48px 0;
         }
 
         ul, ol {
-            margin: 15px 0 15px 30px;
+            margin: 18px 0 18px 36px;
+            color: #3a3731;
         }
 
         li {
-            margin-bottom: 8px;
+            margin-bottom: 12px;
+            line-height: 1.75;
+        }
+
+        li::marker {
+            color: #d97757;
         }
 
         footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #21262d;
+            margin-top: 64px;
+            padding-top: 28px;
+            border-top: 1px solid rgba(232, 230, 220, 0.8);
             text-align: center;
-            color: #8b949e;
-            font-size: 12px;
+            color: #8a8781;
+            font-size: 13px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
         }
 
         /* Metric highlights */
         .metric {
-            background-color: #0d1117;
-            border-left: 3px solid #56d364;
-            padding: 10px 15px;
-            margin: 10px 0;
-            border-radius: 3px;
+            background: linear-gradient(135deg, rgba(120, 140, 93, 0.08) 0%, rgba(120, 140, 93, 0.04) 100%);
+            border-left: 4px solid #788c5d;
+            padding: 18px 24px;
+            margin: 20px 0;
+            border-radius: 6px;
         }
 
         .metric strong {
-            color: #79c0ff;
+            color: #141413;
         }
         """
 
