@@ -28,6 +28,7 @@ List of PR analysis objects:
 - **importance** (String): PR importance level
   - Values: `High`, `Medium`, `Minor`, `Low`
 - **meaning** (String): Detailed analysis in Chinese
+- **pr_link** (String): the link of github pull request or commit 
 
 ### Example Item
 
@@ -47,7 +48,8 @@ List of PR analysis objects:
     {
       "type": "FixBug",
       "importance": "High",
-      "meaning": "修复了关键的内存泄漏问题"
+      "meaning": "修复了关键的内存泄漏问题",
+      "pr_link": "https://github.com/vllm-project/vllm/pull/29999"
     }
   ]
 }
