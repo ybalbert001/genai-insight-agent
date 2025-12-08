@@ -1,0 +1,18 @@
+# Claude Code runtime files
+_logs/
+_cacache/
+_update-notifier-last-checked
+bin/
+lib/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Skill package
+*.skill
+
+# IDE
+.vscode/
+.idea/

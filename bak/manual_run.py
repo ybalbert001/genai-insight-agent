@@ -15,6 +15,7 @@ WORKFLOW_URL = 'http://dify-alb-1-281306538.us-west-2.elb.amazonaws.com/v1/workf
 
 workflow_api_key_hellogithub = os.getenv('WORKFLOW_API_KEY_HELLOGITHUB')
 workflow_api_key_github_analyze = os.getenv('WORKFLOW_API_KEY_GITHUB_ANALYZE')
+workflow_api_key_github_trend = os.getenv('WORKFLOW_API_KEY_GITHUB_TREND')
 
 if not workflow_api_key_hellogithub or not workflow_api_key_github_analyze:
     raise ValueError("请在.env文件中设置WORKFLOW_API_KEY_HELLOGITHUB和WORKFLOW_API_KEY_GITHUB_ANALYZE")
@@ -25,6 +26,14 @@ def run_project_analyze_job(repo: str, start_date: str):
     """
 
     return invoke_slow_workflow(record = {"repo": repo, "start_date": start_date}, workflow_api_key=workflow_api_key_github_analyze)
+
+def run_github_get_trend_job(repo: str, start_date: str):
+    """
+    run github_repo_analyze workflow
+    """
+
+    return invoke_slow_workflow(record = {}, workflow_api_key=workflow_api_key_github_trend)
+
 
 def run_hellogithub_routine_job():
     """
