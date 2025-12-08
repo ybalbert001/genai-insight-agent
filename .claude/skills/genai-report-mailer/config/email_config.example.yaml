@@ -1,0 +1,115 @@
+# GenAI Report Mailer Configuration Example
+# Copy this file to email_config.yaml and fill in your settings
+
+# SMTP Server Configuration
+smtp:
+  # 163 Mail (NetEase)
+  host: smtp.163.com
+  port: 465  # Use SSL (or 25 for non-SSL)
+  use_tls: false  # Use SSL instead of TLS for port 465
+  use_ssl: true   # Enable SSL
+
+  # Gmail
+  # host: smtp.gmail.com
+  # port: 587
+  # use_tls: true
+
+  # Outlook/Office365
+  # host: smtp.office365.com
+  # port: 587
+  # use_tls: true
+
+  # AWS SES (replace region)
+  # host: email-smtp.us-east-1.amazonaws.com
+  # port: 587
+  # use_tls: true
+
+  # Your SMTP credentials
+  username: your-email@163.com
+
+  # Password: Can be set in three ways:
+  # 1. Direct value: password: your-password
+  # 2. Environment variable: password: ${SMTP_PASSWORD}
+  # 3. Leave empty to read from SMTP_PASSWORD env var
+  password: ${SMTP_PASSWORD}  # Reads from environment variable
+
+# Sender Information
+sender:
+  name: GenAI Insight Bot  # Display name in "From" field
+  email: your-email@163.com  # Must match SMTP username for most providers
+
+# Recipient Lists
+recipients:
+  # Primary recipients (visible to all)
+  to:
+    - recipient1@example.com
+    - recipient2@example.com
+    - recipient3@example.com
+
+  # Carbon copy recipients (optional, visible to all)
+  cc: []
+    # - manager@example.com
+    # - team-lead@example.com
+
+  # Blind carbon copy recipients (optional, hidden from others)
+  bcc: []
+    # - archive@example.com
+
+# Email Settings
+email:
+  # Prefix added to email subject (before date)
+  subject_prefix: "[GenAI Insight]"
+
+  # Reply-to address (optional, defaults to sender email)
+  # reply_to: your-email@gmail.com
+
+
+# =============================================================================
+# HOW TO SET UP 163 MAIL (NetEase) SMTP PASSWORD
+# =============================================================================
+#
+# 1. Enable SMTP Service:
+#    - Login to 163 Mail: https://mail.163.com
+#    - Go to Settings (设置) > POP3/SMTP/IMAP
+#    - Enable "SMTP Service" (SMTP服务)
+#
+# 2. Generate Authorization Password (授权密码):
+#    - Click "Generate Authorization Password" (生成授权密码)
+#    - Complete SMS verification
+#    - Copy the authorization password (NOT your login password)
+#
+# 3. Use environment variable (recommended):
+#    export SMTP_PASSWORD="your-authorization-password"
+#
+#    Or in config file:
+#    password: ${SMTP_PASSWORD}  # Reads from env var
+#    password: your-authorization-password  # Direct (not recommended)
+#
+# 4. Run the script:
+#    export SMTP_PASSWORD="your-authorization-password"
+#    python3 scripts/send_report.py --report path/to/report.md --config config/email_config.yaml
+#
+# =============================================================================
+# HOW TO SET UP GMAIL APP PASSWORD (Alternative)
+# =============================================================================
+#
+# 1. Enable 2-Factor Authentication:
+#    - Go to https://myaccount.google.com/security
+#    - Under "Signing in to Google", select "2-Step Verification"
+#
+# 2. Generate App Password:
+#    - Go to https://myaccount.google.com/apppasswords
+#    - Select app: "Mail"
+#    - Enter name: "GenAI Report Mailer"
+#    - Copy the 16-character password
+#
+# 3. Update config:
+#    smtp:
+#      host: smtp.gmail.com
+#      port: 587
+#      use_tls: true
+#      use_ssl: false
+#      username: your-email@gmail.com
+#      password: ${SMTP_PASSWORD}
+#
+# =============================================================================
