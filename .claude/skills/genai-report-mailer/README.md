@@ -75,6 +75,7 @@ python3 scripts/send_report.py \
 ✅ **环境变量**: 密码通过环境变量设置，安全可靠
 ✅ **多SMTP支持**: 163、Gmail、Outlook、AWS SES等
 ✅ **S3上传**: 可选将HTML报告上传到S3，文件名格式为 YYYY-mm-dd.html
+✅ **自动索引页**: 每次上传报告时自动生成并更新 index.html，列出所有可用报告
 
 ## 配置说明
 
@@ -103,7 +104,8 @@ s3:
   enabled: true
   bucket: your-bucket-name
   region: us-east-1
-  prefix: genai-reports
+  prefix: genai-reports  # 可选：文件夹路径
+  custom_domain: reports.example.com  # 可选：CloudFront域名
 ```
 
 ### Gmail配置（备选）
@@ -186,8 +188,53 @@ python3 .claude/skills/genai-report-mailer/scripts/send_report.py \
 ### S3上传失败
 
 - **AWS凭证**: 运行 `aws configure` 配置凭证
-- **权限问题**: 确保IAM策略包含 `s3:PutObject` 权限
+- **权限问题**: 确保IAM策略包含 `s3:PutObject` 和 `s3:ListBucket` 权限
 - **boto3未安装**: 运行 `pip install boto3`
+
+## S3索引页功能
+
+当启用S3上传时，脚本会自动生成并维护一个 `index.html` 页面：
+
+### 功能特点
+
+- **自动更新**: 每次上传报告时自动更新索引页
+- **报告列表**: 显示所有已上传的报告，按日期降序排列
+- **统计信息**: 显示总报告数和最新更新时间
+- **风格一致**: 使用与报告相同的 Claude Code 极客风格设计
+- **直接访问**: 点击日期即可查看对应的完整报告
+
+### 访问索引页
+
+索引页的URL格式：
+
+```bash
+# 使用S3直接访问
+https://your-bucket-name.s3.region.amazonaws.com/genai-reports/index.html
+
+# 使用CloudFront自定义域名
+https://reports.example.com/genai-reports/index.html
+```
+
+### 索引页示例
+
+索引页包含以下内容：
+
+1. **标题和描述**: GenAI Insight Reports
+2. **统计卡片**:
+   - 总报告数
+   - 最新更新日期
+3. **报告表格**:
+   - 报告日期（可点击）
+   - 文件大小
+   - 最后修改时间
+
+### CloudFront配置建议
+
+如果使用CloudFront分发，可以设置 `index.html` 作为默认根对象：
+
+1. 在CloudFront分发设置中
+2. 设置"默认根对象"为 `index.html`（或 `genai-reports/index.html`）
+3. 访问域名根路径即可自动显示索引页
 
 ## 安全最佳实践
 

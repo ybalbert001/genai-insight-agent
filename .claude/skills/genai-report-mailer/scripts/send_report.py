@@ -498,9 +498,213 @@ class ReportMailer:
             except Exception as e:
                 print(f"Warning: Failed to attach image {full_path}: {e}")
 
+    def _list_s3_reports(self, s3_client, bucket_name, prefix):
+        """
+        List all HTML reports in S3 bucket
+
+        Args:
+            s3_client: boto3 S3 client
+            bucket_name: S3 bucket name
+            prefix: S3 key prefix
+
+        Returns:
+            List of report dictionaries with 'key', 'date', 'size', 'last_modified'
+        """
+        try:
+            # List objects in bucket
+            paginator = s3_client.get_paginator('list_objects_v2')
+
+            if prefix:
+                prefix = prefix.rstrip('/') + '/'
+                pages = paginator.paginate(Bucket=bucket_name, Prefix=prefix)
+            else:
+                pages = paginator.paginate(Bucket=bucket_name)
+
+            reports = []
+            for page in pages:
+                if 'Contents' not in page:
+                    continue
+
+                for obj in page['Contents']:
+                    key = obj['Key']
+
+                    # Skip index.html and non-HTML files
+                    if key.endswith('index.html') or not key.endswith('.html'):
+                        continue
+
+                    # Extract date from filename
+                    filename = Path(key).name
+                    date_match = re.search(r'(\d{4})-(\d{2})-(\d{2})', filename)
+
+                    if date_match:
+                        reports.append({
+                            'key': key,
+                            'filename': filename,
+                            'date': f"{date_match.group(1)}-{date_match.group(2)}-{date_match.group(3)}",
+                            'size': obj['Size'],
+                            'last_modified': obj['LastModified']
+                        })
+
+            # Sort by date (newest first)
+            reports.sort(key=lambda x: x['date'], reverse=True)
+
+            return reports
+
+        except Exception as e:
+            print(f"Warning: Failed to list S3 reports: {e}")
+            return []
+
+    def _generate_index_html(self, reports, custom_domain=None, region='us-east-1', bucket_name=None):
+        """
+        Generate index.html page listing all reports
+
+        Args:
+            reports: List of report dictionaries
+            custom_domain: Custom domain for links
+            region: AWS region
+            bucket_name: S3 bucket name
+
+        Returns:
+            HTML string for index page
+        """
+        # Generate report list HTML
+        report_rows = []
+        for report in reports:
+            # Generate URL
+            if custom_domain:
+                url = f"https://{custom_domain}/{report['key']}"
+            else:
+                url = f"https://{bucket_name}.s3.{region}.amazonaws.com/{report['key']}"
+
+            # Format size
+            size_kb = report['size'] / 1024
+            if size_kb < 1024:
+                size_str = f"{size_kb:.1f} KB"
+            else:
+                size_str = f"{size_kb/1024:.1f} MB"
+
+            # Format date
+            date_obj = report['last_modified']
+            modified_str = date_obj.strftime('%Y-%m-%d %H:%M UTC')
+
+            report_rows.append(f"""
+                <tr>
+                    <td><a href="{url}" class="report-link">{report['date']}</a></td>
+                    <td>{size_str}</td>
+                    <td>{modified_str}</td>
+                </tr>
+            """)
+
+        reports_html = "\n".join(report_rows) if report_rows else """
+                <tr>
+                    <td colspan="3" style="text-align: center; color: #8a8781;">No reports available yet.</td>
+                </tr>
+        """
+
+        # Get the same CSS style as reports
+        css = self._get_geek_style_css()
+
+        # Generate complete HTML
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenAI Insight Reports - Index</title>
+    <style>{css}
+
+        .report-link {{
+            font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-weight: 600;
+            font-size: 15px;
+            letter-spacing: -0.2px;
+        }}
+
+        .stats {{
+            display: flex;
+            gap: 32px;
+            margin: 32px 0 48px 0;
+            padding: 24px;
+            background: linear-gradient(135deg, rgba(120, 140, 93, 0.08) 0%, rgba(120, 140, 93, 0.04) 100%);
+            border-radius: 8px;
+            border-left: 4px solid #788c5d;
+        }}
+
+        .stat-item {{
+            flex: 1;
+        }}
+
+        .stat-label {{
+            font-size: 12px;
+            color: #8a8781;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        }}
+
+        .stat-value {{
+            font-size: 28px;
+            color: #d97757;
+            font-weight: 700;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        }}
+
+        .header-subtitle {{
+            color: #6b6962;
+            font-size: 16px;
+            margin-top: 12px;
+            margin-bottom: 32px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GenAI Insight Reports</h1>
+        <p class="header-subtitle">
+            Comprehensive analysis and insights on trending GenAI projects from GitHub
+        </p>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">Total Reports</div>
+                <div class="stat-value">{len(reports)}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Latest Update</div>
+                <div class="stat-value">{reports[0]['date'] if reports else 'N/A'}</div>
+            </div>
+        </div>
+
+        <h2>Available Reports</h2>
+        <p>Click on any date to view the full report with detailed analysis and visualizations.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Report Date</th>
+                    <th>Size</th>
+                    <th>Last Modified</th>
+                </tr>
+            </thead>
+            <tbody>
+{reports_html}
+            </tbody>
+        </table>
+
+        <footer>
+            <p>Generated by GenAI Insight Reporter | Powered by Claude</p>
+            <p style="margin-top: 8px; font-size: 12px;">Last updated: {reports[0]['last_modified'].strftime('%Y-%m-%d %H:%M UTC') if reports else 'N/A'}</p>
+        </footer>
+    </div>
+</body>
+</html>"""
+
+        return html
+
     def upload_to_s3(self, html_content, markdown_path):
         """
-        Upload HTML content to S3 bucket
+        Upload HTML content to S3 bucket and update index page
 
         Args:
             html_content: HTML content to upload
@@ -533,11 +737,13 @@ class ReportMailer:
 
             # Build S3 key
             s3_key = f"{date_str}.html"
-            if s3_config.get('prefix'):
-                s3_key = f"{s3_config['prefix'].rstrip('/')}/{s3_key}"
+            prefix = s3_config.get('prefix', '').rstrip('/')
+            if prefix:
+                s3_key = f"{prefix}/{s3_key}"
 
             bucket_name = s3_config['bucket']
             region = s3_config.get('region', 'us-east-1')
+            custom_domain = s3_config.get('custom_domain')
 
             print(f"Uploading to S3: s3://{bucket_name}/{s3_key}")
 
@@ -555,10 +761,15 @@ class ReportMailer:
 
             # Generate S3 URL
             s3_url = f"https://{bucket_name}.s3.{region}.amazonaws.com/{s3_key}"
-            if s3_config.get('custom_domain'):
-                s3_url = f"https://{s3_config['custom_domain']}/{s3_key}"
+            if custom_domain:
+                s3_url = f"https://{custom_domain}/{s3_key}"
 
             print(f"✅ HTML uploaded to S3: {s3_url}")
+
+            # Update index page
+            print("Updating index page...")
+            self._update_index_page(s3_client, bucket_name, region, prefix, custom_domain)
+
             return s3_url
 
         except NoCredentialsError:
@@ -572,6 +783,61 @@ class ReportMailer:
             import traceback
             traceback.print_exc()
             return None
+
+    def _update_index_page(self, s3_client, bucket_name, region, prefix, custom_domain):
+        """
+        Generate and upload index.html page
+
+        Args:
+            s3_client: boto3 S3 client
+            bucket_name: S3 bucket name
+            region: AWS region
+            prefix: S3 key prefix
+            custom_domain: Custom domain for links
+        """
+        try:
+            # List all reports
+            reports = self._list_s3_reports(s3_client, bucket_name, prefix)
+
+            if not reports:
+                print("No reports found to generate index.")
+                return
+
+            # Generate index HTML
+            index_html = self._generate_index_html(
+                reports,
+                custom_domain=custom_domain,
+                region=region,
+                bucket_name=bucket_name
+            )
+
+            # Build index key
+            index_key = 'index.html'
+            if prefix:
+                index_key = f"{prefix}/index.html"
+
+            # Upload index page
+            s3_client.put_object(
+                Bucket=bucket_name,
+                Key=index_key,
+                Body=index_html.encode('utf-8'),
+                ContentType='text/html',
+                ContentEncoding='utf-8'
+            )
+
+            # Generate index URL
+            if custom_domain:
+                index_url = f"https://{custom_domain}/{index_key}"
+            else:
+                index_url = f"https://{bucket_name}.s3.{region}.amazonaws.com/{index_key}"
+
+            print(f"✅ Index page updated: {index_url}")
+            print(f"   Total reports listed: {len(reports)}")
+
+        except Exception as e:
+            print(f"⚠️  Failed to update index page: {e}")
+            import traceback
+            traceback.print_exc()
 
     def send_email(self, markdown_path, subject=None, dry_run=False):
         """

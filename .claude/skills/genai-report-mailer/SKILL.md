@@ -15,6 +15,7 @@ Sends GenAI insight reports via email with professional, geek-style HTML formatt
 4. Sends multipart emails (HTML + plain text fallback)
 5. Supports multiple recipients and CC/BCC
 6. Optionally uploads HTML reports to S3 bucket (YYYY-mm-dd.html format)
+7. Automatically generates and updates index.html page listing all reports
 
 ## Quick Start
 
@@ -115,6 +116,24 @@ Automatically upload HTML reports to S3:
 - **URL generation**: Returns S3 URL or custom domain URL
 - **AWS credentials**: Supports AWS CLI, environment variables, or IAM roles
 - **Requirements**: boto3 package (`pip install boto3`)
+- **Auto Index**: Automatically generates index.html listing all reports
+
+### Index Page Generation
+
+When S3 upload is enabled, an index page is automatically generated:
+
+**Features**:
+- Lists all uploaded reports in chronological order (newest first)
+- Displays report metadata: date, file size, last modified time
+- Shows statistics: total report count, latest update date
+- Matches the same Claude Code geek-style design as reports
+- Automatically updated with each new report upload
+
+**Access**:
+- S3 URL: `https://bucket.s3.region.amazonaws.com/prefix/index.html`
+- CloudFront: `https://custom-domain.com/prefix/index.html`
+
+**Required Permissions**: `s3:PutObject`, `s3:ListBucket`
 
 ## Usage
 
