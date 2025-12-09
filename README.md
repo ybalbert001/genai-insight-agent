@@ -44,10 +44,11 @@ GenAI项目洞察分析代理，用于自动化分析GitHub项目。分析的主
 
 ### 快速生成报告
 
+执行下面命令，或者`sh ./generate_report.sh`
 ```bash
 export CLAUDE_CODE_USE_BEDROCK=1
 export AWS_REGION=us-east-1
-report_date=`date -d "2 day ago" +%Y-%m-%d`
+report_date=$(date -d "2 day ago" +%Y-%m-%d)
 claude -p "生成${report_date}日的genai insight report, 并发送email" --dangerously-skip-permissions > report.log
 ```
 
