@@ -8,7 +8,7 @@
 export CLAUDE_CODE_USE_BEDROCK=1
 export AWS_REGION=us-east-1
 
-export PATH=/usr/local/bin:/usr/bin:/bin:$PATH
+export PATH=/home/ubuntu/.local/bin/:$PATH
 
 # 设置工作目录
 cd -- "$(dirname -- "$0")"
@@ -17,7 +17,7 @@ cd -- "$(dirname -- "$0")"
 report_date=$(date -d "2 day ago" +%Y-%m-%d)
 
 # 执行命令，记录日志
-claude -p "生成${report_date}日的genai insight report, 并发送email" --dangerously-skip-permissions > report-${report_date}.log 2>&1
+claude -p "生成${report_date}日的genai insight report, 并发送email" --dangerously-skip-permissions > /tmp/report-${report_date}.log
 
 # 可选：记录执行时间
-echo "Report generated at $(date)" >> report-${report_date}.log
+echo "Report generated at $(date)" >> /tmp/report-${report_date}.log
