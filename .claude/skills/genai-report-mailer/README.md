@@ -7,10 +7,12 @@
 ### 1. 安装依赖
 
 ```bash
-pip install pyyaml markdown2
+pip install pyyaml markdown2 boto3
 # 或使用 uv:
-uv pip install pyyaml markdown2
+uv pip install pyyaml markdown2 boto3
 ```
+
+注：boto3 仅在启用 S3 上传功能时需要
 
 ### 2. 配置邮箱（163邮箱）
 
@@ -72,6 +74,7 @@ python3 scripts/send_report.py \
 ✅ **纯文本后备**: 支持非HTML邮件客户端
 ✅ **环境变量**: 密码通过环境变量设置，安全可靠
 ✅ **多SMTP支持**: 163、Gmail、Outlook、AWS SES等
+✅ **S3上传**: 可选将HTML报告上传到S3，文件名格式为 YYYY-mm-dd.html
 
 ## 配置说明
 
@@ -94,6 +97,13 @@ recipients:
   to:
     - recipient1@example.com
     - recipient2@example.com
+
+# S3上传（可选）
+s3:
+  enabled: true
+  bucket: your-bucket-name
+  region: us-east-1
+  prefix: genai-reports
 ```
 
 ### Gmail配置（备选）
@@ -172,6 +182,12 @@ python3 .claude/skills/genai-report-mailer/scripts/send_report.py \
 - **检查路径**: 确认图片文件存在
 - **查看日志**: 脚本会显示附加的图片信息
 - **邮件客户端**: 某些客户端默认屏蔽图片
+
+### S3上传失败
+
+- **AWS凭证**: 运行 `aws configure` 配置凭证
+- **权限问题**: 确保IAM策略包含 `s3:PutObject` 权限
+- **boto3未安装**: 运行 `pip install boto3`
 
 ## 安全最佳实践
 

@@ -63,6 +63,27 @@ email:
   # Reply-to address (optional, defaults to sender email)
   # reply_to: your-email@gmail.com
 
+# S3 Upload Configuration (Optional)
+# Enable this to upload HTML reports to S3 bucket
+s3:
+  # Enable/disable S3 upload
+  enabled: false
+
+  # S3 bucket name
+  bucket: your-bucket-name
+
+  # AWS region (default: us-east-1)
+  region: us-east-1
+
+  # Optional: S3 key prefix (folder path)
+  # If set, files will be uploaded to: prefix/YYYY-mm-dd.html
+  # If not set, files will be uploaded to root: YYYY-mm-dd.html
+  prefix: genai-reports
+
+  # Optional: Custom domain for CloudFront or S3 website
+  # If set, will use this domain in the generated URL
+  # custom_domain: reports.example.com
+
 
 # =============================================================================
 # HOW TO SET UP 163 MAIL (NetEase) SMTP PASSWORD
@@ -111,5 +132,52 @@ email:
 #      use_ssl: false
 #      username: your-email@gmail.com
 #      password: ${SMTP_PASSWORD}
+#
+# =============================================================================
+# HOW TO SET UP S3 UPLOAD (Optional)
+# =============================================================================
+#
+# 1. Install boto3:
+#    pip install boto3
+#
+# 2. Configure AWS credentials:
+#    Option A: AWS CLI configuration
+#      aws configure
+#      Enter your AWS Access Key ID, Secret Access Key, and region
+#
+#    Option B: Environment variables
+#      export AWS_ACCESS_KEY_ID="your-access-key-id"
+#      export AWS_SECRET_ACCESS_KEY="your-secret-access-key"
+#      export AWS_DEFAULT_REGION="us-east-1"
+#
+#    Option C: IAM role (for EC2/Lambda)
+#      Attach IAM role with S3 PutObject permission
+#
+# 3. Update config:
+#    s3:
+#      enabled: true
+#      bucket: your-bucket-name
+#      region: us-east-1
+#      prefix: genai-reports  # Optional: folder prefix
+#
+# 4. S3 Bucket Permissions:
+#    Ensure your IAM user/role has the following permissions:
+#      {
+#        "Version": "2012-10-17",
+#        "Statement": [
+#          {
+#            "Effect": "Allow",
+#            "Action": [
+#              "s3:PutObject",
+#              "s3:PutObjectAcl"
+#            ],
+#            "Resource": "arn:aws:s3:::your-bucket-name/*"
+#          }
+#        ]
+#      }
+#
+# 5. (Optional) Make bucket publicly accessible:
+#    - Set bucket policy to allow public read
+#    - Or use CloudFront distribution with custom domain
 #
 # =============================================================================

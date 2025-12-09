@@ -28,6 +28,14 @@ except ImportError:
     print("Error: markdown2 not installed. Install with: pip install markdown2")
     sys.exit(1)
 
+try:
+    import boto3
+    from botocore.exceptions import ClientError, NoCredentialsError
+except ImportError:
+    print("Warning: boto3 not installed. S3 upload will not be available.")
+    print("Install with: pip install boto3")
+    boto3 = None
+
 
 class ReportMailer:
     """Email sender for GenAI insight reports"""
@@ -490,6 +498,81 @@ class ReportMailer:
             except Exception as e:
                 print(f"Warning: Failed to attach image {full_path}: {e}")
 
+    def upload_to_s3(self, html_content, markdown_path):
+        """
+        Upload HTML content to S3 bucket
+
+        Args:
+            html_content: HTML content to upload
+            markdown_path: Path to markdown file (for extracting date)
+
+        Returns:
+            S3 URL if successful, None otherwise
+        """
+        # Check if boto3 is available
+        if boto3 is None:
+            print("⚠️  boto3 not installed. Skipping S3 upload.")
+            return None
+
+        # Check if S3 config exists
+        s3_config = self.config.get('s3')
+        if not s3_config or not s3_config.get('enabled', False):
+            print("S3 upload not enabled in config. Skipping.")
+            return None
+
+        try:
+            # Extract date from filename
+            filename = Path(markdown_path).stem
+            date_match = re.search(r'(\d{4})(\d{2})(\d{2})', filename)
+            if date_match:
+                date_str = f"{date_match.group(1)}-{date_match.group(2)}-{date_match.group(3)}"
+            else:
+                # Fallback to current date
+                from datetime import datetime
+                date_str = datetime.now().strftime('%Y-%m-%d')
+
+            # Build S3 key
+            s3_key = f"{date_str}.html"
+            if s3_config.get('prefix'):
+                s3_key = f"{s3_config['prefix'].rstrip('/')}/{s3_key}"
+
+            bucket_name = s3_config['bucket']
+            region = s3_config.get('region', 'us-east-1')
+
+            print(f"Uploading to S3: s3://{bucket_name}/{s3_key}")
+
+            # Create S3 client
+            s3_client = boto3.client('s3', region_name=region)
+
+            # Upload HTML content
+            s3_client.put_object(
+                Bucket=bucket_name,
+                Key=s3_key,
+                Body=html_content.encode('utf-8'),
+                ContentType='text/html',
+                ContentEncoding='utf-8'
+            )
+
+            # Generate S3 URL
+            s3_url = f"https://{bucket_name}.s3.{region}.amazonaws.com/{s3_key}"
+            if s3_config.get('custom_domain'):
+                s3_url = f"https://{s3_config['custom_domain']}/{s3_key}"
+
+            print(f"✅ HTML uploaded to S3: {s3_url}")
+            return s3_url
+
+        except NoCredentialsError:
+            print("❌ AWS credentials not found. Configure AWS CLI or set environment variables.")
+            return None
+        except ClientError as e:
+            print(f"❌ S3 upload failed: {e}")
+            return None
+        except Exception as e:
+            print(f"❌ Unexpected error during S3 upload: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
+
     def send_email(self, markdown_path, subject=None, dry_run=False):
         """
         Send email with report
@@ -557,6 +640,9 @@ class ReportMailer:
 
             # Attach HTML version
             msg_alternative.attach(MIMEText(html_content, 'html', 'utf-8'))
+
+            # Upload to S3 (if enabled)
+            s3_url = self.upload_to_s3(html_content, markdown_path)
 
             # Attach images
             print("Attaching images...")

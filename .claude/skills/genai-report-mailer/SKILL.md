@@ -1,6 +1,6 @@
 ---
 name: genai-report-mailer
-description: "Send GenAI insight reports via email with a sleek, geek-style HTML design. Supports multiple recipients, SMTP configuration, and automatic Markdown-to-HTML conversion with embedded images. Use when asked to send, email, or deliver GenAI insight reports."
+description: "Send GenAI insight reports via email with a sleek, geek-style HTML design. Supports multiple recipients, SMTP configuration, automatic Markdown-to-HTML conversion with embedded images, and S3 upload. Use when asked to send, email, or deliver GenAI insight reports."
 ---
 
 # GenAI Report Mailer
@@ -14,6 +14,7 @@ Sends GenAI insight reports via email with professional, geek-style HTML formatt
 3. Embeds chart images as inline attachments
 4. Sends multipart emails (HTML + plain text fallback)
 5. Supports multiple recipients and CC/BCC
+6. Optionally uploads HTML reports to S3 bucket (YYYY-mm-dd.html format)
 
 ## Quick Start
 
@@ -49,6 +50,13 @@ recipients:
 
 email:
   subject_prefix: "[GenAI Insight]"
+
+# S3 Upload (Optional)
+s3:
+  enabled: true
+  bucket: your-bucket-name
+  region: us-east-1
+  prefix: genai-reports
 ```
 
 ### 2. Send a Report
@@ -98,6 +106,15 @@ Support for:
 - **To**: Primary recipients (visible to all)
 - **CC**: Carbon copy recipients (visible to all)
 - **BCC**: Blind carbon copy (hidden from others)
+
+### S3 Upload (Optional)
+
+Automatically upload HTML reports to S3:
+- **File naming**: YYYY-mm-dd.html (e.g., 2025-12-09.html)
+- **S3 path**: Configurable bucket and prefix
+- **URL generation**: Returns S3 URL or custom domain URL
+- **AWS credentials**: Supports AWS CLI, environment variables, or IAM roles
+- **Requirements**: boto3 package (`pip install boto3`)
 
 ## Usage
 
@@ -160,6 +177,14 @@ recipients:
 email:
   subject_prefix: "[GenAI Insight]"  # Added to report date
   reply_to: your-email@gmail.com      # Reply-to address (optional)
+
+# S3 Upload Configuration (Optional)
+s3:
+  enabled: true                       # Enable/disable S3 upload
+  bucket: your-bucket-name            # S3 bucket name
+  region: us-east-1                   # AWS region
+  prefix: genai-reports               # Optional: S3 key prefix (folder)
+  custom_domain: reports.example.com  # Optional: Custom domain for URLs
 ```
 
 ### Gmail Setup
@@ -260,14 +285,15 @@ echo "Report sent for $DATE"
 ### Python Dependencies
 
 ```bash
-pip install pyyaml markdown2 premailer
+pip install pyyaml markdown2 premailer boto3
 # or with uv:
-uv pip install pyyaml markdown2 premailer
+uv pip install pyyaml markdown2 premailer boto3
 ```
 
 - **pyyaml**: Parse YAML config files
 - **markdown2**: Convert Markdown to HTML
 - **premailer**: Inline CSS for email compatibility
+- **boto3**: AWS SDK for S3 upload (optional, only needed if S3 upload is enabled)
 
 ### Python Version
 
@@ -311,6 +337,15 @@ uv pip install pyyaml markdown2 premailer
 - Add SPF/DKIM records to your domain
 - Ask recipients to whitelist sender address
 - Avoid spam trigger words in subject
+
+### S3 Upload Issues
+
+**Problem**: AWS credentials not found or access denied
+
+**Solutions**:
+- Configure AWS CLI: `aws configure`
+- Ensure IAM policy includes `s3:PutObject` permission
+- Install boto3 if needed: `pip install boto3`
 
 ## Best Practices
 
