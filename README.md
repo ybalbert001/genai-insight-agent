@@ -45,19 +45,11 @@ GenAI项目洞察分析代理，用于自动化分析GitHub项目。分析的主
 ### 快速生成报告
 
 ```bash
-python3 .claude/skills/genai-insight-reporter/scripts/report_generator.py \
-  --dynamodb-script .claude/skills/genai-rawdata-retriever/scripts/dynamodb_manager.py \
-  --output-dir report_output \
-  --max-features 5
+export CLAUDE_CODE_USE_BEDROCK=1
+export AWS_REGION=us-east-1
+report_date=`date -d "2 day ago" +%Y-%m-%d`
+claude -p "生成${report_date}日的genai insight report, 并发送email" --dangerously-skip-permissions > report.log
 ```
-
-### 自定义模板
-
-模板文件位于 `.claude/skills/genai-insight-reporter/templates/report_template.md.j2`。
-
-详细使用说明请查看：
-- Skill文档: `.claude/skills/genai-insight-reporter/SKILL.md`
-- 模板说明: `.claude/skills/genai-insight-reporter/templates/README.md`
 
 ## 分析目标
 
