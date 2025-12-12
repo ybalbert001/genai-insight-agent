@@ -571,7 +571,8 @@ class ReportMailer:
         report_rows = []
         for report in reports:
             # Generate URL
-            url = f"https://d2085bnaxxamc7.cloudfront.net/{report['key']}"
+            key = report['key'].split("/")[-1]
+            url = f"https://d2085bnaxxamc7.cloudfront.net/{key}"
 
             # Format size
             size_kb = report['size'] / 1024
