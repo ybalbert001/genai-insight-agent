@@ -100,21 +100,17 @@ class ReportGenerator:
             increments = self.analyzer.calculate_daily_increments(data_list)
             all_increments[repo_url] = increments
 
-            # Get latest data (try today and yesterday)
-            latest_data = None
-            for date_offset in [0, 1]:
-                check_date = today - timedelta(days=date_offset)
-                latest = self.analyzer.query_repo_data(repo_url, check_date, check_date)
-                if latest and len(latest) > 0:
-                    latest_data = latest[0]
-                    print(f"  - Using data from {check_date}")
-                    break
+            # Get data for target date only (no fallback to previous day)
+            latest_data = self.analyzer.query_repo_data(repo_url, today, today)
 
-            if not latest_data:
-                print(f"  - No recent data found")
+            if not latest_data or len(latest_data) == 0:
+                print(f"  - No data found for {today}")
                 repos_data[repo_url] = {'features': [], 'cloud_integrations': []}
                 repo_stars[repo_url] = 0
                 continue
+
+            latest_data = latest_data[0]
+            print(f"  - Using data from {today}")
 
             # Extract current star count from latest data
             current_stars = int(latest_data.get('metric_info', {}).get('stars', '0'))

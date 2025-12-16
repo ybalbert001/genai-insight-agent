@@ -14,7 +14,7 @@ export PATH=/home/ubuntu/.local/bin/:$PATH
 cd -- "$(dirname -- "$0")"
 
 # 生成报告日期
-report_date=$(date -d "2 day ago" +%Y-%m-%d)
+report_date=$(date -d "1 day ago" +%Y-%m-%d)
 
 # 执行命令，记录日志
 claude -p "生成${report_date}日的genai insight report, 并发送email" --dangerously-skip-permissions > /tmp/report-${report_date}.log
