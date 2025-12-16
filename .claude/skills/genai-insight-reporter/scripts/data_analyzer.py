@@ -109,13 +109,15 @@ class DataAnalyzer:
         - Total PRs (open + merged)
         - Merged PRs
         - Total Issues (open + closed)
-        - Stars
+
+        Also includes cumulative star count for trend visualization.
 
         Args:
             data_list: List of data records
 
         Returns:
-            List of increment records with date, pr_increment, merged_pr_increment, issue_increment, star_increment
+            List of increment records with date, pr_increment, merged_pr_increment,
+            issue_increment, star_count
         """
         data_list.sort(key=lambda x: x['collect_date'])
         increments = []
@@ -142,19 +144,17 @@ class DataAnalyzer:
             curr_total_issue = int(curr_metrics.get('open_issue_count', '0')) + int(curr_metrics.get('closed_issue_count', '0'))
             issue_increment = curr_total_issue - prev_total_issue
 
-            # Calculate star increment
-            prev_stars = int(prev_metrics.get('stars', '0'))
+            # Get current star count
             curr_stars = int(curr_metrics.get('stars', '0'))
-            star_increment = curr_stars - prev_stars
 
-            # Filter out negative or zero increments (data anomalies)
-            if pr_increment > 0 or merged_pr_increment > 0 or issue_increment > 0 or star_increment > 0:
+            # Filter out days with no activity (data anomalies)
+            if pr_increment > 0 or merged_pr_increment > 0 or issue_increment > 0:
                 increments.append({
                     'date': curr['collect_date'],
                     'pr_increment': max(0, pr_increment),
                     'merged_pr_increment': max(0, merged_pr_increment),
                     'issue_increment': max(0, issue_increment),
-                    'star_increment': max(0, star_increment)
+                    'star_count': curr_stars
                 })
 
         return increments

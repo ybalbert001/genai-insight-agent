@@ -58,7 +58,7 @@ class ChartGenerator:
         1. Daily New PRs
         2. Daily Merged PRs
         3. Daily New Open Issues
-        4. Daily Star Increments
+        4. Total Stars
 
         Args:
             all_increments: Dict mapping repo_url to list of increment records
@@ -77,7 +77,7 @@ class ChartGenerator:
             ('pr_increment', 'Daily New PRs', axes[0]),
             ('merged_pr_increment', 'Daily Merged PRs', axes[1]),
             ('issue_increment', 'Daily New Open Issues', axes[2]),
-            ('star_increment', 'Daily Star Increments', axes[3])
+            ('star_count', 'Total Stars', axes[3])
         ]
 
         for metric_key, title, ax in metrics:

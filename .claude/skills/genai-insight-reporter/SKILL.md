@@ -586,7 +586,7 @@ uv pip install matplotlib
 
 ## Notes
 
-- Charts use incremental metrics (day-over-day changes), not cumulative counts
+- Charts use incremental metrics for PRs and Issues (day-over-day changes), and total count for Stars
 - Feature extraction prioritizes recent updates over historical significance
 - Cloud integration detection is keyword-based and may require refinement
 - Report length is intentionally concise to reduce reader burden
