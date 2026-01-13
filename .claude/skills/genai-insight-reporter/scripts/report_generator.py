@@ -384,8 +384,6 @@ class ReportGenerator:
             "",
             "## 数据来源",
             f"> https://github.com ({template_data['repo_links']})",
-            ">",
-            "> https://tldr.tech/ai/",
             "",
             "## 1. 重点项目更新 (Priority Repo Updates)",
             ""
