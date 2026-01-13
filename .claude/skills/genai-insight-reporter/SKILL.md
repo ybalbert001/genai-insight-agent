@@ -95,14 +95,6 @@ The generated report includes:
   - Alibaba Cloud
 - Excludes refactor and documentation PRs
 
-### 4. Emerging Insights (Optional, High-quality only)
-- Analyzes AI industry trends from tldr.tech/ai
-- Correlates trending topics with repo changes
-- Generates forward-looking insights
-- **Requirements**: High standard, must include confidence tags [High, Medium, Low]
-- **Source**: Past 7 days of tldr.tech/ai newsletters
-- **Process**: Claude analyzes trends → finds correlations → generates insights
-
 ## Usage
 
 ### Two Workflow Options
@@ -281,7 +273,6 @@ The skill uses a modular design with both automated and AI-assisted workflows:
   - 重点项目更新 (Priority Repo Updates)
   - 云厂商集成进展 (Cloud Provider Integrations)
   - 开源项目社区生态指标 (Community Activity Metrics)
-  - 前瞻性信号 (Emerging Signals) - optional
 - Supports PR numbers and titles when available
 - Customizable template variables
 
@@ -301,17 +292,9 @@ The skill uses a modular design with both automated and AI-assisted workflows:
 - **Output**: JSON file with candidates for Claude to curate
 - **Usage**: When Claude needs detailed context for each candidate
 
-#### `tldr_fetcher.py` (AI Trend Analysis Helper)
-- Generates URLs for tldr.tech/ai newsletters (past 7 days)
-- Creates fetch instructions for Claude to use with WebFetch tool
-- **Output**: JSON file with URLs and extraction prompts
-- **Usage**: For Section 4 (Emerging Insights) - optional, high-effort section
-- **Note**: Actual fetching and analysis done by Claude using WebFetch
-
 **Workflow Comparison**:
 - `report_generator.py`: Creates draft markdown → Claude reviews/rewrites → Final report
 - `data_extractor.py`: Exports JSON → Claude analyzes/selects/writes → Final report from scratch
-- `tldr_fetcher.py`: Provides URLs → Claude fetches/analyzes/correlates → Adds Emerging Insights section
 
 ## Requirements
 
@@ -388,72 +371,9 @@ The scripts perform deterministic operations:
      - Use metrics as supporting evidence, not the focus
      - Be concise and actionable
 
-### Stage 3: Emerging Insights Analysis (Optional, AI-intensive)
-
-**This is a high-standard, optional section that requires extensive AI analysis.**
-
-#### Step 1: Fetch AI Industry Trends
-```bash
-python scripts/tldr_fetcher.py --days 7 --output tldr_urls.json
-```
-
-This generates a JSON file with URLs to fetch from tldr.tech/ai.
-
-#### Step 2: Claude Fetches and Analyzes Content
-For each URL in the JSON:
-1. Use **WebFetch** tool to retrieve the newsletter content
-2. Extract key AI developments:
-   - New model releases
-   - Infrastructure developments
-   - Tooling/framework updates
-   - Research breakthroughs
-3. Identify recurring themes and trending topics
-
-#### Step 3: Correlate Trends with Repo Changes
-Claude analyzes the connection between:
-- Industry trends from tldr.tech
-- Feature updates in monitored repos
-- Cloud integration patterns
-- Community activity shifts
-
-#### Step 4: Generate Insights with Confidence Tags
-
-**Insight Quality Standards** (very high bar):
-- Must be **forward-looking** (not just descriptive)
-- Must provide **actionable intelligence** for GenAI practitioners
-- Must have **clear evidence** connecting trend to repo changes
-- Must be **non-obvious** (not something easily inferred)
-
-**Confidence Levels**:
-- **High**: Multiple repos showing same pattern, clear industry trend, strong evidence
-- **Medium**: Single repo but significant change, emerging trend, moderate evidence
-- **Low**: Tentative connection, early signals, speculative
-
-**Example Insights**:
-
-```markdown
-### 🔮 Emerging Insights
-
-**Insight 1: Multi-modal inference becoming infrastructure priority** [Confidence: High]
-- **Trend**: tldr.tech featured 3 major multi-modal model releases this week (GPT-4V update, Gemini 1.5 Pro, Claude 3.5 Sonnet vision)
-- **Repo correlation**: Both vLLM and SGLang added multi-modal input processing in last 2 days
-- **Implication**: Inference infrastructure shifting from text-only to multi-modal as default. Practitioners should prepare for multi-modal workloads.
-
-**Insight 2: Cloud providers accelerating GenAI-specific hardware** [Confidence: Medium]
-- **Trend**: AWS announced new Trainium2 chips optimized for transformer models
-- **Repo correlation**: Increased AWS integration PRs in multiple repos (vLLM, LiteLLM)
-- **Implication**: Possible shift toward cloud-specific optimizations vs hardware-agnostic approaches.
-```
-
-#### When to Skip This Section
-- If no meaningful correlations found (don't force insights)
-- If confidence level would be consistently "Low"
-- If insights are obvious or already well-known
-- Time constraints (this section is very time-intensive)
-
 ### Complete Workflow Steps
 
-**Basic Workflow (Sections 1-3)**:
+**Workflow Steps**:
 1. **Determine paths**: Locate dynamodb_manager.py from genai-rawdata-retriever skill
 2. **Execute script**: Run report_generator.py to get raw report with charts
 3. **Read generated report**: Load the report markdown and review all sections
@@ -466,16 +386,8 @@ Claude analyzes the connection between:
    - Verify each is a genuine GenAI cloud service integration
    - Remove false positives
    - Clarify integration descriptions
-6. **Regenerate report**: Create final curated report with improved content (Sections 1-3)
-
-**Extended Workflow (Add Section 4: Emerging Insights)**:
-7. **Generate tldr URLs**: Run `tldr_fetcher.py` to get URLs for past 7 days
-8. **Fetch AI news**: Use WebFetch tool to retrieve content from each URL
-9. **Extract trends**: Analyze each newsletter for key developments and themes
-10. **Correlate with repos**: Find connections between industry trends and repo changes
-11. **Generate insights**: Create 2-3 high-quality insights with confidence tags
-12. **Add to report**: Append Emerging Insights section if quality threshold met
-13. **Present to user**: Show report path and summarize key insights
+6. **Regenerate report**: Create final curated report with improved content
+7. **Present to user**: Show report path and summarize key insights
 
 ## Example Invocation by Claude
 
