@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from data_analyzer import DataAnalyzer
 from chart_generator import ChartGenerator
+from tldr_fetcher import TLDRFetcher
 
 try:
     from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -44,6 +45,7 @@ class ReportGenerator:
 
         self.analyzer = DataAnalyzer(dynamodb_script_path, region)
         self.chart_gen = ChartGenerator(self.images_dir)
+        self.tldr_fetcher = TLDRFetcher(region="ap-northeast-1")
 
     def generate_report(self, days=15, max_features=5, max_features_per_repo=3, target_date=None):
         """
@@ -68,6 +70,11 @@ class ReportGenerator:
 
         print(f"\nAnalysis period: {start_date} to {end_date}")
         print(f"Analysis window: {days} days\n")
+
+        # Step 0: Fetch TLDR AI news for the target date
+        print("Fetching TLDR AI news...")
+        tldr_news = self.tldr_fetcher.fetch_tldr_news(today, max_items=5)
+        print(f"  - Found {len(tldr_news)} TLDR news items\n")
 
         # Step 1: Get Human-P0 repos
         repos = self.analyzer.get_human_p0_repos()
@@ -138,7 +145,7 @@ class ReportGenerator:
         # Step 4: Generate markdown report
         print("\nGenerating report...")
         report_path = self._generate_markdown_report(
-            repos_data, all_increments, repo_names, repo_stars, chart_path, today, max_features, max_features_per_repo
+            repos_data, all_increments, repo_names, repo_stars, chart_path, today, max_features, max_features_per_repo, tldr_news
         )
 
         print("\n" + "="*60)
@@ -149,7 +156,7 @@ class ReportGenerator:
 
         return report_path
 
-    def _generate_markdown_report(self, repos_data, all_increments, repo_names, repo_stars, chart_path, today, max_features, max_features_per_repo):
+    def _generate_markdown_report(self, repos_data, all_increments, repo_names, repo_stars, chart_path, today, max_features, max_features_per_repo, tldr_news=None):
         """
         Generate markdown report content using Jinja2 template
 
@@ -162,13 +169,14 @@ class ReportGenerator:
             today: Date object for today
             max_features: Maximum total features
             max_features_per_repo: Maximum features per repo
+            tldr_news: List of TLDR AI news items
 
         Returns:
             Path to saved report file
         """
         # Prepare template data
         template_data = self._prepare_template_data(
-            repos_data, all_increments, repo_names, repo_stars, chart_path, today, max_features, max_features_per_repo
+            repos_data, all_increments, repo_names, repo_stars, chart_path, today, max_features, max_features_per_repo, tldr_news
         )
 
         # Generate report using Jinja2 if available
@@ -184,7 +192,7 @@ class ReportGenerator:
         print(f"Report saved: {report_path}")
         return report_path
 
-    def _prepare_template_data(self, repos_data, all_increments, repo_names, repo_stars, chart_path, today, max_features, max_features_per_repo):
+    def _prepare_template_data(self, repos_data, all_increments, repo_names, repo_stars, chart_path, today, max_features, max_features_per_repo, tldr_news=None):
         """
         Prepare data for template rendering
 
@@ -197,6 +205,7 @@ class ReportGenerator:
             today: Date object for today
             max_features: Maximum total features
             max_features_per_repo: Maximum features per repo
+            tldr_news: List of TLDR AI news items
 
         Returns:
             Dict with all template variables
@@ -334,6 +343,7 @@ class ReportGenerator:
         return {
             'date': today.strftime('%Y-%m-%d'),
             'repo_links': repo_links,
+            'tldr_news': tldr_news or [],  # TLDR AI news items
             'features_by_repo': features_by_repo,
             'cloud_integrations_by_repo': cloud_integrations_by_repo,
             'chart_image_path': f"images/{chart_path.name}",
@@ -382,12 +392,39 @@ class ReportGenerator:
         lines = [
             f"# GenAI Insight Report - {template_data['date']}",
             "",
-            "## 数据来源",
-            f"> https://github.com ({template_data['repo_links']})",
+            "数据来源:",
+            "> [TLDR AI Newsletter](https://tldr.tech/ai)",
+            f"> GitHub ({template_data['repo_links']})",
             "",
-            "## 1. 重点项目更新 (Priority Repo Updates)",
+            "## 1. AI 行业动态 (TLDR AI Highlights)",
             ""
         ]
+
+        # Add TLDR news
+        tldr_news = template_data.get('tldr_news', [])
+        if tldr_news:
+            for news in tldr_news:
+                title = news.get('cn_title', '')
+                link = news.get('link', '')
+                summary = news.get('summary', '')
+
+                if link:
+                    lines.append(f"### [{title}]({link})")
+                else:
+                    lines.append(f"### {title}")
+                lines.append("")
+                lines.append(summary)
+                lines.append("")
+        else:
+            lines.append("*本期暂无 TLDR AI 新闻*")
+            lines.append("")
+
+        lines.extend([
+            "---",
+            "",
+            "## 2. 重点项目更新 (Priority Repo Updates)",
+            ""
+        ])
 
         # Add features
         if template_data['features_by_repo']:
@@ -410,7 +447,7 @@ class ReportGenerator:
 
         # Add cloud integrations
         lines.extend([
-            "## 2. 云厂商集成进展",
+            "## 3. 云厂商集成进展",
             ""
         ])
 
@@ -436,7 +473,7 @@ class ReportGenerator:
         lines.extend([
             "---",
             "",
-            "## 3. 开源项目社区生态指标",
+            "## 4. 开源项目社区生态指标",
             "",
             f"![社区活跃度分析]({template_data['chart_image_path']})",
             "",
