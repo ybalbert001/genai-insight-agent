@@ -10,9 +10,10 @@ GenAI项目洞察分析代理，用于自动化分析GitHub项目。分析的主
         - github_repo_analyze (用于定时运行获取某个repo某日的变更情况)
         - github_trend_analyze (用于分析github trend页面的热门项目，用于发现值得关注的新项目)
         - repo_analyze_daily_trigger (用于定时触发github_repo_analyze)
+        - tldr_newletter_process (用于接收gmail订阅邮件的app script触发，解析邮件并把整理翻译的内容放置到S3)
   - 采集来源
     - github信息 (目前为指定的N个知名repo)
-    - tldr.tech（暂无）
+    - tldr.tech 
       - https://tldr.tech/ai/
     - reddit信息（暂无）
     - youtube信息（暂无）
@@ -31,6 +32,7 @@ GenAI项目洞察分析代理，用于自动化分析GitHub项目。分析的主
   - Claude Skills
     - genai-rawdata-retriever (Dynamodb表读取)
     - genai-insight-reporter (报告生成)
+    - genai-report-mailer (专门用于邮件发送)
 
 ## 报告生成
 
@@ -54,34 +56,32 @@ claude -p "生成${report_date}日的genai insight report, 并发送email" --dan
 
 ## 分析目标
 
-### 1. 重要更新追踪
-#### 1.1 Feature更新
+### 1. AI 行业动态 (TLDR AI Highlights)
+- 总结 https://tldr.tech/ai/{前1天日期} 的AI行业新闻
+
+### 2. 开源项目重要更新追踪
+#### 2.1 Feature更新
 - 筛选条件：`type="Feat"` 且 `importance="High"`
 - 时间范围：最近1天数据
 - 输出限制：总计不超过5条，单个repo不超过3条
 
-#### 1.2 云厂商集成更新
+#### 2.2 云厂商集成更新
 - 关注服务：AWS Bedrock/SageMaker、Azure AI、Google Cloud AI、Ali Cloud AI等GenAI相关服务
 - 时间范围：最近1天数据
 - 排除内容：重构类、文档类更新
 
-### 2. 社区活跃度分析
-#### 2.1 统计指标（近15天趋势）
+### 3. 社区活跃度分析
+#### 3.1 统计指标（近15天趋势）
 - **新增PR总量** = (open_pr + merged_pr)的日增量
 - **新增Merged PR数量** = merged_pr的日增量
 - **新增Open Issue数量** = (open_issue + closed_issue)的日增量
 - **新增Star数量** = star的日增量
 
-#### 2.2 社区项目趋势解读
+#### 3.2 社区项目趋势解读
 - **项目维护水平** = Merged PRs / New PRs（接近1为佳）
 - **社区参与度** = Issues vs PRs（反映用户/贡献者比例）
 - **项目关注度** = Star增长趋势
 - **领域热度** = 跨项目横向对比（LLM推理引擎、LLM开发平台、垂直Agent、模型微调、LLM网关等）
-
-### 3. 开放性Insight（需标注置信度）
-- 提取 https://tldr.tech/ai/{前7天日期} 的AI行业关键信息
-- 关联repos中的相关变更
-- 输出格式：**[置信度：高/中/低]** Insight内容
 
 ---
 
