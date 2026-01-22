@@ -16,7 +16,7 @@ class TLDRFetcher:
 
     S3_BUCKET = "aws-genai-insight-report-cn-bucket"
     S3_PREFIX = "genai-reports/tldr_ai"
-    CDN_BASE_URL = "https://d2085bnaxxamc7.cloudfront.net"
+    TLDR_BASE_URL = "https://d2085bnaxxamc7.cloudfront.net/tldr_ai"
 
     def __init__(self, region: str = "ap-northeast-1", bedrock_region: str = "us-east-1"):
         """
@@ -139,7 +139,7 @@ class TLDRFetcher:
 
             # 生成公开访问链接
             filename = key.split('/')[-1]
-            link = f"{self.CDN_BASE_URL}/{date_str}/{filename}"
+            link = f"{self.TLDR_BASE_URL}/{date_str}/{filename}"
 
             return {
                 'cn_title': title,
