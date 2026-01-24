@@ -63,6 +63,41 @@ email:
   # Reply-to address (optional, defaults to sender email)
   # reply_to: your-email@gmail.com
 
+# ListMonk Subscription Configuration (Optional)
+# Enable this to add subscribe/unsubscribe links in email footer
+# Can also dynamically fetch subscribers from ListMonk API
+listmonk:
+  # Enable subscription links in email footer
+  enabled: false
+
+  # ListMonk service base URL (must be publicly accessible)
+  # base_url: http://your-listmonk-server:9000
+
+  # Newsletter list UUID (from ListMonk admin -> Lists)
+  # This pre-selects the list on the subscription form
+  # list_uuid: your-list-uuid
+
+  # API configuration for fetching subscribers dynamically
+  api:
+    enabled: false
+    username: subscriber-admin
+    # API token: Set via environment variable LISTMONK_API_TOKEN
+    # Can use ${LISTMONK_API_TOKEN} format or leave empty to read from env
+    token: ${LISTMONK_API_TOKEN}
+    # List ID (numeric) for fetching subscribers
+    list_id: 1
+    # Pagination: max subscribers per API request
+    per_page: 100
+
+  # Subscriber source determines where to get recipients:
+  # - 'yaml': Use only static recipients from config file (default)
+  # - 'listmonk': Use only subscribers from ListMonk API
+  # - 'both': Merge YAML recipients with ListMonk subscribers (deduplicated)
+  subscriber_source: yaml
+
+  # Fallback to YAML recipients when ListMonk API fails
+  fallback_to_yaml: true
+
 # S3 Upload Configuration (Optional)
 # Enable this to upload HTML reports to S3 bucket
 s3:

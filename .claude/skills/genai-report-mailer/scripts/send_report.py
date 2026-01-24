@@ -36,6 +36,13 @@ except ImportError:
     print("Install with: pip install boto3")
     boto3 = None
 
+try:
+    import requests
+except ImportError:
+    print("Warning: requests not installed. ListMonk API will not be available.")
+    print("Install with: pip install requests")
+    requests = None
+
 
 class ReportMailer:
     """Email sender for GenAI insight reports"""
@@ -49,6 +56,38 @@ class ReportMailer:
         """
         self.config = self._load_config(config_path)
         self.config_dir = Path(config_path).parent
+
+    def _get_subscription_links(self):
+        """
+        Generate subscription link from listmonk config
+
+        Returns:
+            dict with 'subscribe_url' and 'enabled' keys
+        """
+        listmonk_config = self.config.get('listmonk', {})
+        enabled = listmonk_config.get('enabled', False)
+        base_url = listmonk_config.get('base_url', '')
+
+        if not enabled or not base_url:
+            return {
+                'subscribe_url': '',
+                'enabled': False
+            }
+
+        # Remove trailing slash
+        base_url = base_url.rstrip('/')
+
+        # Build subscription URL with optional list pre-selection
+        list_uuid = listmonk_config.get('list_uuid', '')
+        if list_uuid:
+            subscribe_url = f"{base_url}/subscription/form?l={list_uuid}"
+        else:
+            subscribe_url = f"{base_url}/subscription/form"
+
+        return {
+            'subscribe_url': subscribe_url,
+            'enabled': True
+        }
 
     def _load_config(self, config_path):
         """Load email configuration from YAML file"""
@@ -95,7 +134,184 @@ class ReportMailer:
 
         config['smtp']['password'] = password
 
+        # Resolve ListMonk API token
+        config = self._resolve_listmonk_credentials(config)
+
         return config
+
+    def _resolve_listmonk_credentials(self, config):
+        """
+        Resolve ListMonk API credentials from environment variables
+
+        Supports:
+        - ${ENV_VAR} format
+        - Empty or missing token (reads from LISTMONK_API_TOKEN)
+        """
+        listmonk_config = config.get('listmonk', {})
+        api_config = listmonk_config.get('api', {})
+
+        if not api_config.get('enabled', False):
+            return config
+
+        token = api_config.get('token', '')
+
+        if not token or token.strip() == '':
+            # Empty token, try LISTMONK_API_TOKEN env var
+            token = os.environ.get('LISTMONK_API_TOKEN', '')
+        elif token.startswith('${') and token.endswith('}'):
+            # ${ENV_VAR} format
+            env_var = token[2:-1]
+            token = os.environ.get(env_var, '')
+            if not token:
+                print(f"Warning: Environment variable {env_var} not set for ListMonk API")
+
+        if 'listmonk' not in config:
+            config['listmonk'] = {}
+        if 'api' not in config['listmonk']:
+            config['listmonk']['api'] = {}
+        config['listmonk']['api']['token'] = token
+
+        return config
+
+    def _fetch_listmonk_subscribers(self):
+        """
+        Fetch all subscribers from ListMonk API for the configured list
+
+        Returns:
+            list: List of email addresses, or empty list on failure
+        """
+        # Check if requests is available
+        if requests is None:
+            print("Warning: requests library not available. Cannot fetch ListMonk subscribers.")
+            return []
+
+        listmonk_config = self.config.get('listmonk', {})
+        api_config = listmonk_config.get('api', {})
+
+        # Check if API is enabled and configured
+        if not api_config.get('enabled', False):
+            return []
+
+        base_url = listmonk_config.get('base_url', '').rstrip('/')
+        username = api_config.get('username', '')
+        token = api_config.get('token', '')
+        list_id = api_config.get('list_id', 1)
+        per_page = api_config.get('per_page', 100)
+
+        if not base_url or not username or not token:
+            print("Warning: ListMonk API not fully configured (missing base_url, username, or token)")
+            return []
+
+        subscribers = []
+        page = 1
+
+        try:
+            while True:
+                # Build API URL
+                api_url = f"{base_url}/api/subscribers"
+                params = {
+                    'list_id': list_id,
+                    'page': page,
+                    'per_page': per_page
+                }
+
+                print(f"Fetching subscribers from ListMonk (page {page})...")
+
+                # Make API request with basic auth
+                response = requests.get(
+                    api_url,
+                    params=params,
+                    auth=(username, token),
+                    timeout=30
+                )
+
+                if response.status_code != 200:
+                    print(f"Warning: ListMonk API returned status {response.status_code}")
+                    print(f"Response: {response.text[:200]}")
+                    break
+
+                data = response.json()
+
+                # Extract subscribers from response
+                # ListMonk API returns: {"data": {"results": [...], "total": N, ...}}
+                results = data.get('data', {}).get('results', [])
+
+                if not results:
+                    break
+
+                # Extract email addresses from subscriber objects
+                for subscriber in results:
+                    email = subscriber.get('email', '')
+                    status = subscriber.get('status', '')
+
+                    # Only include enabled/active subscribers
+                    if email and status == 'enabled':
+                        subscribers.append(email)
+
+                # Check if there are more pages
+                total = data.get('data', {}).get('total', 0)
+                if page * per_page >= total:
+                    break
+
+                page += 1
+
+            print(f"Fetched {len(subscribers)} subscribers from ListMonk")
+            return subscribers
+
+        except requests.exceptions.Timeout:
+            print("Warning: ListMonk API request timed out")
+            return []
+        except requests.exceptions.ConnectionError:
+            print(f"Warning: Cannot connect to ListMonk server at {base_url}")
+            return []
+        except Exception as e:
+            print(f"Warning: Error fetching ListMonk subscribers: {e}")
+            return []
+
+    def _get_recipients(self):
+        """
+        Get recipient list based on configuration
+
+        Handles two modes:
+        - 'yaml': Use only static YAML recipients
+        - 'listmonk': Fetch from ListMonk, use as BCC, TO is always ybalbert@amazon.com
+
+        Returns:
+            dict: {'to': [...], 'cc': [...], 'bcc': [...]}
+        """
+        listmonk_config = self.config.get('listmonk', {})
+        subscriber_source = listmonk_config.get('subscriber_source', 'listmonk')
+        fallback_to_yaml = listmonk_config.get('fallback_to_yaml', True)
+
+        # Get static YAML recipients
+        yaml_recipients = {
+            'to': list(self.config['recipients'].get('to') or []),
+            'cc': list(self.config['recipients'].get('cc') or []),
+            'bcc': list(self.config['recipients'].get('bcc') or [])
+        }
+
+        # If source is yaml-only, return directly
+        if subscriber_source == 'yaml':
+            return yaml_recipients
+
+        # Fetch ListMonk subscribers
+        listmonk_subscribers = self._fetch_listmonk_subscribers()
+
+        # Handle fallback if ListMonk fetch failed
+        if not listmonk_subscribers:
+            if fallback_to_yaml:
+                print("Using YAML recipients as fallback")
+                return yaml_recipients
+            else:
+                print("Warning: No ListMonk subscribers and fallback disabled")
+                return {'to': ['ybalbert@amazon.com'], 'cc': [], 'bcc': []}
+
+        # ListMonk mode: TO is always ybalbert@amazon.com, subscribers go to BCC
+        return {
+            'to': ['ybalbert@amazon.com'],
+            'cc': [],
+            'bcc': listmonk_subscribers
+        }
 
     def convert_markdown_to_html(self, markdown_path):
         """
@@ -120,6 +336,12 @@ class ReportMailer:
         # Get geek-style CSS
         css = self._get_geek_style_css()
 
+        # Get subscription links
+        links = self._get_subscription_links()
+        subscribe_link = ""
+        if links['enabled']:
+            subscribe_link = f' | <a href="{links["subscribe_url"]}">订阅本报告</a>'
+
         # Build complete HTML
         html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -133,7 +355,7 @@ class ReportMailer:
     <div class="container">
         {html_body}
         <footer>
-            <p>Generated by GenAI Insight Reporter | Powered by Claude | <a href="https://d2085bnaxxamc7.cloudfront.net/index.html">更多报告</a></p>
+            <p>Generated by GenAI Insight Reporter | Powered by Claude | <a href="https://d2085bnaxxamc7.cloudfront.net/index.html">更多报告</a>{subscribe_link}</p>
         </footer>
     </div>
 </body>
@@ -201,6 +423,12 @@ class ReportMailer:
         # Get geek-style CSS
         css = self._get_geek_style_css()
 
+        # Get subscription links
+        links = self._get_subscription_links()
+        subscribe_link = ""
+        if links['enabled']:
+            subscribe_link = f' | <a href="{links["subscribe_url"]}">订阅本报告</a>'
+
         # Build complete HTML
         html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -214,7 +442,7 @@ class ReportMailer:
     <div class="container">
         {html_body}
         <footer>
-            <p>Generated by GenAI Insight Reporter | Powered by Claude | <a href="https://d2085bnaxxamc7.cloudfront.net/index.html">更多报告</a></p>
+            <p>Generated by GenAI Insight Reporter | Powered by Claude | <a href="https://d2085bnaxxamc7.cloudfront.net/index.html">更多报告</a>{subscribe_link}</p>
         </footer>
     </div>
 </body>
@@ -650,6 +878,12 @@ class ReportMailer:
         # Get the same CSS style as reports
         css = self._get_geek_style_css()
 
+        # Get subscription links for footer
+        links = self._get_subscription_links()
+        subscribe_link = ""
+        if links['enabled']:
+            subscribe_link = f' | <a href="{links["subscribe_url"]}" style="color: #5286b8;">订阅报告</a>'
+
         # Generate complete HTML
         html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -739,7 +973,7 @@ class ReportMailer:
         </table>
 
         <footer>
-            <p>Generated by GenAI Insight Reporter | Powered by Claude</p>
+            <p>Generated by GenAI Insight Reporter | Powered by Claude{subscribe_link}</p>
             <p style="margin-top: 8px; font-size: 12px;">Last updated: {reports[0]['last_modified'].strftime('%Y-%m-%d %H:%M UTC') if reports else 'N/A'}</p>
         </footer>
     </div>
@@ -1002,6 +1236,14 @@ class ReportMailer:
                 subject_prefix = self.config.get('email', {}).get('subject_prefix', '[GenAI Insight]')
                 subject = f"{subject_prefix} Report - {date_str}"
 
+            # Get recipients (from YAML, ListMonk, or both)
+            recipients = self._get_recipients()
+
+            # Validate we have at least one recipient
+            if not recipients['to']:
+                print("Error: No recipients configured")
+                return False
+
             # Create message
             msg = MIMEMultipart('related')
             msg['Subject'] = subject
@@ -1009,10 +1251,10 @@ class ReportMailer:
                 self.config['sender']['name'],
                 self.config['sender']['email']
             ))
-            msg['To'] = ', '.join(self.config['recipients']['to'])
+            msg['To'] = ', '.join(recipients['to'])
 
-            if self.config['recipients'].get('cc'):
-                msg['Cc'] = ', '.join(self.config['recipients']['cc'])
+            if recipients.get('cc'):
+                msg['Cc'] = ', '.join(recipients['cc'])
 
             if self.config.get('email', {}).get('reply_to'):
                 msg['Reply-To'] = self.config['email']['reply_to']
@@ -1038,11 +1280,11 @@ class ReportMailer:
             print(f"Connecting to SMTP server: {self.config['smtp']['host']}:{self.config['smtp']['port']}")
 
             # Build recipient list
-            all_recipients = list(self.config['recipients']['to'])
-            if self.config['recipients'].get('cc'):
-                all_recipients.extend(self.config['recipients']['cc'])
-            if self.config['recipients'].get('bcc'):
-                all_recipients.extend(self.config['recipients']['bcc'])
+            all_recipients = list(recipients['to'])
+            if recipients.get('cc'):
+                all_recipients.extend(recipients['cc'])
+            if recipients.get('bcc'):
+                all_recipients.extend(recipients['bcc'])
 
             # Connect and send
             smtp_config = self.config['smtp']
@@ -1065,9 +1307,9 @@ class ReportMailer:
 
             print(f"✅ Email sent successfully!")
             print(f"   Subject: {subject}")
-            print(f"   To: {', '.join(self.config['recipients']['to'][:3])}" +
-                  (f" and {len(self.config['recipients']['to'])-3} more"
-                   if len(self.config['recipients']['to']) > 3 else ""))
+            print(f"   To: {', '.join(recipients['to'][:3])}" +
+                  (f" and {len(recipients['to'])-3} more"
+                   if len(recipients['to']) > 3 else ""))
 
             return True
 
