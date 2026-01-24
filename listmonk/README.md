@@ -18,9 +18,10 @@ docker compose up -d
 user_name : subscriber-admin
 access_token: <access_token>
 
-## 创建一个private List(UI操作)
+## 创建一个public List(UI操作)
 List Name: genai-sa-newsletter
-
+> private list不能在公网被订阅
+> 此外禁用 Send opt-in confirmation
 
 ## 添加一个subscriber(API操作)
 ```bash
