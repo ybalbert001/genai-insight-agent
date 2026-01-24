@@ -15,9 +15,15 @@ GenAI项目洞察分析代理，用于自动化分析GitHub项目。分析的主
     - github信息 (目前为指定的N个知名repo)
     - tldr.tech 
       - https://tldr.tech/ai/
-    - reddit信息（暂无）
-    - youtube信息（暂无）
-      - https://www.youtube.com/@githubtrendfeed
+    - 更多候选来源(暂无)
+      - venturebeat
+      - economist
+      - aivalley
+      - every
+      - ainews
+      - reddit信息
+      - youtube信息
+        - https://www.youtube.com/@githubtrendfeed
 - 监控模块
   - Langfuse系统（直接配置在Dify的workflow上，用于问题排查)
 - 存贮模块
