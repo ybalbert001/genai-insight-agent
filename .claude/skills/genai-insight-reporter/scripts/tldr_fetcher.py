@@ -9,7 +9,7 @@ import json
 from datetime import date
 from typing import List, Dict, Optional
 from bs4 import BeautifulSoup
-
+from urllib.parse import quote
 
 class TLDRFetcher:
     """从 S3 获取 TLDR AI Newsletter HTML 数据"""
@@ -139,7 +139,9 @@ class TLDRFetcher:
 
             # 生成公开访问链接
             filename = key.split('/')[-1]
-            link = f"{self.TLDR_BASE_URL}/{date_str}/{filename}"
+            filename_encoded = quote(filename, safe='')
+            
+            link = f"{self.TLDR_BASE_URL}/{date_str}/{filename_encoded}"
 
             return {
                 'cn_title': title,
